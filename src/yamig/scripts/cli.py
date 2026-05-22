@@ -2,10 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from colorlog import ColoredFormatter
 
-from yamig.core.mlog import MlogGenerator
-from yamig.core.preprocessor import Preprocessor
-from yamig.core.quadtree import QuadtreeProcessor
-from yamig.core.schema import SchemaGenerator
+from yamig import MlogGenerator, QuadtreeProcessor, Preprocessor, SchemaGenerator
 
 import logging as lg
 import json
@@ -236,7 +233,6 @@ class yamigcli:
             schema_name = f'{input_path.stem} picture {target_resolution}'
         
         return schema_name
-        
 
 
     def run_cli(self) -> None:
