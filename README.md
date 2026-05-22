@@ -40,8 +40,17 @@ options:
                         output schematic description (default: None)
   -v, --verbose         debug logs
 ```
+## TODO
+- [ ] find and fix typos
+- [ ] more logging
+- [ ] -q/--quiet mode
+- [ ] schema tags
+- [ ] onefile mode (without preoprocessed.jpg, recomposed.jpg, scripts/, etc.)
+- [ ] -C/--copy-to-clipboard instead of automatically copying
+- [ ] make this readme more organized and readable
 
 ## Licensing
 this project is distributed under the **MIT License**
 
 full license text: [LICENSE](https://github.com/wandderq/yamig/blob/main/LICENSE)
+
