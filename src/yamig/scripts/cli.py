@@ -62,6 +62,20 @@ class amigcli:
         )
 
         argparser.add_argument(
+            '-l', '--max-code-length',
+            default=999,
+            type=int,
+            help='max lines of code in each processor (default: 999)'
+        )
+
+        argparser.add_argument(
+            '-d', '--display-name',
+            type=str,
+            default='display1',
+            help='display to drawflush (default: display1)'
+        )
+
+        argparser.add_argument(
             '-v', '--verbose',
             action='store_true',
             help='debug logs'
@@ -182,6 +196,22 @@ class amigcli:
             )
         
         return dispersion_threshold
+    
+
+    def _parse_max_code_length(self, max_code_length: int) -> int:
+        if max_code_length < 1:
+            raise ValueError(
+                'Max code length value must be at least 1, '
+                f'got {max_code_length}'
+            )
+        
+        if max_code_length > 1000:
+            raise ValueError(
+                'Max code length value can\'t be higher than 1000, '
+                f'got {max_code_length}'
+            )
+        
+        return max_code_length
 
 
     def run_cli(self) -> None:
@@ -202,6 +232,7 @@ class amigcli:
         args.max_colors = self._parse_max_colors(args.max_colors)
         args.min_region_size = self._parse_min_region_size(args.min_region_size)
         args.dispersion_threshold = self._parse_dispersion_threshold(args.dispersion_threshold)
+        args.max_code_length = self._parse_max_code_length(args.max_code_length)
 
         self.start_amig(args)
     
@@ -245,6 +276,7 @@ class amigcli:
         recomposed_image_path = args.output_path / 'quadtree_recomposed.jpg'
         self.logger.debug(f'saving recomposed image to {str(recomposed_image_path)}')
         recomposed_image.save(recomposed_image_path)
+        
 
         
 

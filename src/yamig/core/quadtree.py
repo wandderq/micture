@@ -15,7 +15,7 @@ class QuadtreeProcessor:
     
 
     def decompose(self, x: int, y: int, w: int, h: int) -> list:
-        self.logger.debug(f'processing region: ({x};{y}) {w}x{h}')
+        # self.logger.debug(f'processing region: ({x};{y}) {w}x{h}')
 
         region = self.image_array[y:y+h, x:x+w]
         region_mean_color = np.mean(region, axis=(0, 1))
