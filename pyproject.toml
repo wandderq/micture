@@ -10,6 +10,7 @@ dependencies = [
     "colorlog>=6.10.1",
     "numpy>=2.4.6",
     "pillow>=12.2.0",
+    "pymsch>=0.0.17",
     "scipy>=1.17.1",
 ]
 

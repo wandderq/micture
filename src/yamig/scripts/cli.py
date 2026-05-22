@@ -5,6 +5,7 @@ from colorlog import ColoredFormatter
 from yamig.core.mlog import MlogGenerator
 from yamig.core.preprocessor import Preprocessor
 from yamig.core.quadtree import QuadtreeProcessor
+from yamig.core.schema import SchemaGenerator
 
 import logging as lg
 import json
@@ -75,6 +76,20 @@ class amigcli:
             type=str,
             default='display1',
             help='display to draw to (default: display1)'
+        )
+
+        argparser.add_argument(
+            '-N', '--schema-name',
+            type=str,
+            default=None,
+            help='output schematic name (default: derived from other args)'
+        )
+
+        argparser.add_argument(
+            '-D', '--schema-description',
+            type=str,
+            default=None,
+            help='output schematic description (default: None)'
         )
 
         argparser.add_argument(
@@ -216,6 +231,14 @@ class amigcli:
         return max_script_length
 
 
+    def _parse_schema_name(self, input_path: Path, schema_name: str | None, target_resolution: str) -> str:
+        if schema_name is None:
+            schema_name = f'{input_path.stem} picture {target_resolution}'
+        
+        return schema_name
+        
+
+
     def run_cli(self) -> None:
         args = self.argparser.parse_args()
 
@@ -235,6 +258,7 @@ class amigcli:
         args.min_region_size = self._parse_min_region_size(args.min_region_size)
         args.dispersion_threshold = self._parse_dispersion_threshold(args.dispersion_threshold)
         args.max_script_length = self._parse_max_script_length(args.max_script_length)
+        args.schema_name = self._parse_schema_name(args.input_path, args.schema_name, args.target_resolution)
 
         self.start_amig(args)
     
@@ -301,6 +325,22 @@ class amigcli:
             self.logger.debug(f'saving script {script_i}')
             with (scripts_path / f'processor_{script_i}.txt').open(mode='w') as file:
                 file.write('\n'.join(script))
+        
+
+        ### Schema ###
+        schema_generator = SchemaGenerator(
+            scripts,
+            args.target_resolution,
+            args.schema_name,
+            args.schema_description
+        )
+
+        schema = schema_generator.generate_schema()
+
+        schema_path = args.output_path / f"{args.schema_name.replace(' ', '_')}.msch"
+        self.logger.info(f'saving schema to {str(schema_path)}')
+        schema.write_file(schema_path)
+        schema.write_clipboard()
 
 
 
