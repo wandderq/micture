@@ -35,7 +35,7 @@ class Preprocessor:
             dither=Image.Dither.NONE
         ).convert('RGB')
 
-        img_array = np.array(img, dtype=np.float16)
+        img_array = np.array(img, dtype=np.float32)
         palette = np.unique(img_array.reshape(-1, 3), axis=0)
 
         self.logger.debug(f'unique colors: {len(palette)}')

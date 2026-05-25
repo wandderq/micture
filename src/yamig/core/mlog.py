@@ -2,10 +2,10 @@ import logging as lg
 import copy
 
 class MlogGenerator:
-    def __init__(self, max_script_length: int, display_name: str, target_resolution: tuple[int, int]):
+    def __init__(self, max_script_length: int, target_resolution: tuple[int, int]):
         self.logger = lg.getLogger('amig.mlog-generator')
         self.max_script_length = max_script_length
-        self.display_name = display_name
+        self.display_name = 'display1'
         self.target_resolution = target_resolution
     
 
@@ -70,7 +70,6 @@ class MlogGenerator:
 
         for line_i, line in enumerate(big_script, start=1):
             if line.startswith('draw color'):
-                self.logger.debug(f'current color={line}')
                 current_color = line
                 
                 if line_i != 1:

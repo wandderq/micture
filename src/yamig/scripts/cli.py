@@ -1,355 +1,290 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from colorlog import ColoredFormatter
 
-from yamig import MlogGenerator, QuadtreeProcessor, Preprocessor, SchemaGenerator
+from yamig.core.main import Yamig
+from yamig import __version__
 
-import logging as lg
-import json
 import sys
-import os
+import re
 
-
-class yamigcli:
+class YamigCLI:
     def __init__(self):
         self.argparser = self._init_argparser()
     
 
     def _init_argparser(self) -> ArgumentParser:
         argparser = ArgumentParser(
-            description='yet another mindustry image generator'
+            description=f'yet another mindustry image generator v{__version__}',
+            epilog='github: https://github.com/wandderq/yamig'
         )
 
+        log_group = argparser.add_mutually_exclusive_group()
+        
         argparser.add_argument(
             'input_path',
             type=Path,
-            help='input image filepath'
+            help='input image path'
         )
 
         argparser.add_argument(
-            '-o', '--output-path',
+            '-o', '--output',
             type=Path,
             default=None,
-            help='output directory (default: derived from input_path)'
+            dest='output_path',
+            help='output directory (default: derived from args)'
         )
 
         argparser.add_argument(
-            '-r', '--target-resolution',
-            default='320x192',
+            '-O', '--onefile',
+            dest='onefile',
+            action='store_true',
+            help='save only .msch file'
+        )
+        
+        argparser.add_argument(
+            '-C', '--copy-to-clipboard',
+            dest='copy_to_clipboard',
+            action='store_true',
+            help='copy schematic to clipboard'
+        )
+
+        argparser.add_argument(
+            '-r', '--resolution',
             type=str,
-            help='target resolution (default: 320x192)'
+            default='5x5b',
+            dest='resolution',
+            help='target resolution (format: WxH[b/px]) (default: 5x5b)'
         )
 
         argparser.add_argument(
             '-c', '--max-colors',
+            type=int,
             default=64,
-            type=int,
-            help='max colors in the target image (default: 64) (may be inaccurate, +-15%% after quadtree)'
-        )
-
-        argparser.add_argument(
-            '-R', '--min-region-size',
-            default=8,
-            type=int,
-            help='minimal quadtree region size (px) (default: 8)'
+            dest='max_colors',
+            help='max target image colors (default: 64) (up to 15%% loss)'
         )
 
         argparser.add_argument(
             '-t', '--dispersion-threshold',
             type=int,
             default=600,
+            dest='dispersion_threshold',
             help='quadtree color dispersion threshold (default: 600)'
         )
 
         argparser.add_argument(
-            '-l', '--max-script-length',
-            default=1000,
+            '-s', '--min-region-size',
             type=int,
-            help='max lines of script in each processor (default: 1000)'
+            default=8,
+            dest='min_region_size',
+            help='min quadtree region size (px) (default: 8)'
         )
 
         argparser.add_argument(
-            '-d', '--display-name',
-            type=str,
-            default='display1',
-            help='display to draw to (default: display1)'
+            '-l', '--max-script-len',
+            type=int,
+            default=1000,
+            dest='max_script_len',
+            help='max lines of script in each processor (default: 100)'
         )
 
         argparser.add_argument(
             '-N', '--schema-name',
             type=str,
             default=None,
-            help='output schematic name (default: derived from other args)'
+            dest='schema_name',
+            help='schematic name (default: derived from args)'
         )
 
         argparser.add_argument(
-            '-D', '--schema-description',
+            '-D', '--schema-desc',
             type=str,
             default=None,
-            help='output schematic description (default: None)'
+            dest='schema_desc',
+            help='schematic description (default: derived from args)'
+        )
+    
+        log_group.add_argument(
+            '-v', '--verbose',
+            dest='verbose',
+            action='store_true',
+            help='verbose mode (debug logs)'
         )
 
-        argparser.add_argument(
-            '-v', '--verbose',
+        log_group.add_argument(
+            '-q', '--quiet',
+            dest='quiet',
             action='store_true',
-            help='debug logs'
+            help='quiet mode (warn/err logs)'
+        )
+
+        log_group.add_argument(
+            '--silent',
+            dest='silent',
+            action='store_true',
+            help='silent mode (no logs)'
         )
 
         return argparser
     
 
-    def _setup_logger(self, verbose: bool, log_file_path: Path) -> lg.Logger:
-        stream_handler = lg.StreamHandler(stream=sys.stdout)
-        stream_handler.setFormatter(
-            ColoredFormatter(
-                fmt="{log_color}{levelname}{reset}:{name} {message}",
-                style='{',
-                log_colors={
-                    'DEBUG': 'blue',
-                    'INFO': 'green',
-                    'WARNING': 'yellow',
-                    'ERROR': 'red'
-                }
-            )
-        )
-        stream_handler.setLevel(lg.DEBUG if verbose else lg.INFO)
+    def _parse_input_path(self, input_path: Path) -> Path:
+        input_path = input_path.absolute()
 
-        file_handler = lg.FileHandler(
-            filename=log_file_path,
-            mode='w',
-            encoding='utf-8'
-        )
-        file_handler.setFormatter(
-            lg.Formatter(
-                fmt="{asctime} {name} {levelname}: {message}",
-                style='{',
-                datefmt="%Y.%m.%d-%H:%M:%S"
-            )
-        )
-        file_handler.setLevel(lg.DEBUG)
-
-        root_logger = lg.getLogger()
-        root_logger.setLevel(lg.DEBUG)
+        if not input_path.exists():
+            raise FileNotFoundError(f'{str(input_path)} not found!')
         
-        for handler in root_logger.handlers[:]:
-            root_logger.removeHandler(handler)
-    
-        root_logger.addHandler(stream_handler)
-        root_logger.addHandler(file_handler)
+        if not input_path.is_file():
+            raise FileNotFoundError(f'{str(input_path)} is dir!')
         
-        return lg.getLogger('amig.cli')
+        return input_path
     
 
-    def _parse_output_path(self, input_path: Path, output_path: Path | None) -> Path:
+    def _parse_output_path(self, output_path: Path | None, input_path: Path) -> Path:
         if output_path is None:
-            output_name = f'{input_path.stem}_output'
-            output_path = Path(output_name).absolute()
+            output_path = Path(f'yamig_{input_path.stem}').absolute()
         
         else:
             output_path = output_path.absolute()
         
-        output_path.mkdir(parents=True, exist_ok=True)
+        if output_path.is_file():
+            raise FileExistsError(f'{output_path} is file! (should be dir)')
+        
+        if not output_path.exists():
+            output_path.mkdir(parents=True, exist_ok=True)
+        
         return output_path
-    
 
-    def _parse_input_path(self, input_path: Path) -> Path:
-        if not input_path.exists() or not input_path.is_file():
-            raise FileNotFoundError(f'Input file \'{str(input_path)}\' not found!')
-        
-        return input_path.absolute()
-    
 
-    def _parse_target_resolution(self, target_resolution: str) -> tuple[int,int]:
-        target_resolution_parts = target_resolution.strip().lower().split('x')
-        if len(target_resolution_parts) != 2 or not all(part.isdigit() for part in target_resolution_parts):
-            raise ValueError(f'Invalid resolution format: {target_resolution}')
+    def _parse_resolution(self, resolution: str) -> tuple[int, int]:
+        match = re.match(r'^(\d+)x(\d+)(px|b)$', resolution)
+        if not match:
+            raise ValueError(f'Invalid resolution: {resolution}')
         
-        orig_width = int(target_resolution_parts[0])
-        orig_height = int(target_resolution_parts[1])
+        width = int(match.group(1))
+        height = int(match.group(2))
+        suffix = match.group(3)
         
-        width = (orig_width + 16) // 32 * 32
-        height = (orig_height + 16) // 32 * 32
 
-        if orig_width != width or orig_height != height:
-            self.logger.warning(f'target resolution was rounded to the nearest dividable by 32 value: {width}x{height}')
+        if suffix == 'px':
+            resolution = (
+                (width + 16) // 32 * 32,
+                (height + 16) // 32 * 32
+            )
         
-        return (width, height)
-    
+        else:
+            resolution = (width * 32, height * 32)
+        
+        return resolution
+
     
     def _parse_max_colors(self, max_colors: int) -> int:
-        if max_colors < 2:
-            raise ValueError(
-                'Number of max colors must be at least 2, '
-                f'got {max_colors}'
-            )
-        
-        if max_colors > 256:
-            raise ValueError(
-                'Number of max colors can\'t be higher than 256, '
-                f'got {max_colors}'
-            )
+        if not (1 <= max_colors <= 256):
+            raise ValueError(f'Invalid max colors value: {max_colors} (must be 1-256)')
         
         return max_colors
+    
+    
+    def _parse_dispersion_threshold(self, dispersion_threshold: int) -> int:
+        if not (0 <= dispersion_threshold <= 10000):
+            raise ValueError(
+                f'Invalid color dispersion threshold value: {dispersion_threshold} '
+                '(must be 0-10000)'
+            )
+        
+        return dispersion_threshold
 
 
     def _parse_min_region_size(self, min_region_size: int) -> int:
-        if min_region_size < 1:
+        if min_region_size <= 0:
             raise ValueError(
-                'Minimal region size value must be at least 1, '
-                f'got {min_region_size}'
+                f'Invalid min region size value: {min_region_size} '
+                '(must be > 0)'
             )
         
         return min_region_size
     
 
-    def _parse_dispersion_threshold(self, dispersion_threshold: int) -> int:
-        if dispersion_threshold < 1:
+    def _parse_max_script_len(self, max_script_len: int) -> int:
+        if not (3 <= max_script_len <= 1000):
             raise ValueError(
-                'Quadtree color dispersion threshold value must be at least 1, '
-                f'got {dispersion_threshold}'
+                f'Invalid max script length value: {max_script_len} '
+                '(must be 3-1000)'
             )
         
-        return dispersion_threshold
+        return max_script_len
     
 
-    def _parse_max_script_length(self, max_script_length: int) -> int:
-        if max_script_length < 1:
-            raise ValueError(
-                'Max script length value must be at least 1, '
-                f'got {max_script_length}'
-            )
-        
-        if max_script_length > 1000:
-            raise ValueError(
-                'Max script length value can\'t be higher than 1000, '
-                f'got {max_script_length}'
-            )
-        
-        return max_script_length
-
-
-    def _parse_schema_name(self, input_path: Path, schema_name: str | None, target_resolution: str) -> str:
+    def _parse_schema_name(self,
+        schema_name: str | None,
+        input_path: Path,
+        resolution: tuple[int, int]
+    ) -> str:
         if schema_name is None:
-            schema_name = f'{input_path.stem} picture {target_resolution}'
+            resolution_str = f'{resolution[0]}x{resolution[1]}'
+            schema_name = f'{input_path.stem} {resolution_str}'
         
         return schema_name
-
-
-    def run_cli(self) -> None:
-        args = self.argparser.parse_args()
-
-        # parsing args
-        args.input_path = self._parse_input_path(args.input_path)
-        args.output_path = self._parse_output_path(args.input_path, args.output_path)
-
-        # setting up logger
-        self.logger = self._setup_logger(
-            args.verbose,
-            args.output_path / 'amig.log'
-        )
-
-        # keep going but with logger
-        args.target_resolution = self._parse_target_resolution(args.target_resolution)
-        args.max_colors = self._parse_max_colors(args.max_colors)
-        args.min_region_size = self._parse_min_region_size(args.min_region_size)
-        args.dispersion_threshold = self._parse_dispersion_threshold(args.dispersion_threshold)
-        args.max_script_length = self._parse_max_script_length(args.max_script_length)
-        args.schema_name = self._parse_schema_name(args.input_path, args.schema_name, args.target_resolution)
-
-        self.start_yamig(args)
     
 
-    def start_yamig(self, args) -> None:
-        self.logger.info('amig started')
-
-        self.logger.debug(f'image size (tile displays): {args.target_resolution[0]//32}x{args.target_resolution[1]//32}')
-
-        ### Preprocessing ###
-        preprocessor = Preprocessor(
-            args.input_path,
-            args.target_resolution,
-            args.max_colors
-        )
-        image, palette = preprocessor.run()
+    def _parse_schema_desc(self,
+        schema_desc: str | None,
+        input_path: Path,
+        resolution: tuple[int, int],
+        dispersion_threshold: int,
+        max_colors: int,
+        min_region_size: int
+    ) -> str:
+        if schema_desc is None:
+            resolution_str = f'{resolution[0]}x{resolution[1]}'
+            schema_desc = (
+                f"{input_path.name} {resolution_str}\n"
+                f"max colors: {max_colors}\n"
+                f"dispersion threshold: {dispersion_threshold}\n"
+                f"min region size: {min_region_size}"
+            )
         
-        # saving jpg
-        preprocessed_image_path = args.output_path / 'preprocessed.jpg'
-        self.logger.debug(f'saving preprocessed image to {str(preprocessed_image_path)}')
-        image.save(preprocessed_image_path)
+        return schema_desc
 
-        ### Quadtree ###
-        self.logger.info('starting quadtree')
-        quadtree = QuadtreeProcessor(
-            image,
-            args.min_region_size,
-            args.dispersion_threshold,
-            palette
-        )
-        rects = quadtree.rects2int(quadtree.decompose(0, 0, *args.target_resolution))
 
-        self.logger.info(f'image decomposed to {len(rects)} rects (~{len(rects)//900} processors)')
+    def run(self) -> None:
+        args = self.argparser.parse_args()
 
-        # saving json
-        rects_path = args.output_path / 'quadtree_rects.json'
-        self.logger.debug(f'saving rectangles to {str(rects_path)}')
-        with rects_path.open(mode='w') as file:
-            json.dump(rects, file, indent=1)
-        
-        # saving recomposed image
-        recomposed_image = quadtree.recompose(args.target_resolution, rects)
-        recomposed_image_path = args.output_path / 'quadtree_recomposed.jpg'
-        self.logger.debug(f'saving recomposed image to {str(recomposed_image_path)}')
-        recomposed_image.save(recomposed_image_path)
-
-        ### Mlog ###
-        mlog_generator = MlogGenerator(
-            args.max_script_length,
-            args.display_name,
-            args.target_resolution
-        )
-        scripts = mlog_generator.generate_mlog(rects)
-
-        # removing previous scripts
-        scripts_path = args.output_path / 'scripts'
-        scripts_path.mkdir(exist_ok=True)
-
-        for script in scripts_path.iterdir():
-            os.remove(script)
-
-        # saving scripts
-        for script_i, script in enumerate(scripts, start=1):
-            self.logger.debug(f'saving script {script_i}')
-            with (scripts_path / f'processor_{script_i}.txt').open(mode='w') as file:
-                file.write('\n'.join(script))
-        
-
-        ### Schema ###
-        schema_generator = SchemaGenerator(
-            scripts,
-            args.target_resolution,
+        args.input_path = self._parse_input_path(args.input_path)
+        args.output_path = self._parse_output_path(args.output_path, args.input_path)
+        args.resolution = self._parse_resolution(args.resolution)
+        args.max_colors = self._parse_max_colors(args.max_colors)
+        args.dispersion_threshold = self._parse_dispersion_threshold(args.dispersion_threshold)
+        args.min_region_size = self._parse_min_region_size(args.min_region_size)
+        args.max_script_len = self._parse_max_script_len(args.max_script_len)
+        args.schema_name = self._parse_schema_name(
             args.schema_name,
-            args.schema_description
+            args.input_path,
+            args.resolution
+        )
+        args.schema_desc = self._parse_schema_desc(
+            args.schema_desc,
+            args.input_path,
+            args.resolution,
+            args.dispersion_threshold,
+            args.max_colors,
+            args.min_region_size
         )
 
-        schema = schema_generator.generate_schema()
-
-        schema_path = args.output_path / f"{args.schema_name.replace(' ', '_')}.msch"
-        self.logger.info(f'saving schema to {str(schema_path)}')
-        schema.write_file(schema_path)
-        schema.write_clipboard()
+        yamig = Yamig(args)
+        yamig.run()
 
 
 def run_cli() -> None:
     try:
-        yamigcli().run_cli()
+        app = YamigCLI()
+        app.run()
         sys.exit(0)
     
     except Exception as e:
-        print(
-            f'\033[31m{e.__class__.__name__}: {str(e)}.'
-            + (f' Cause: {e.__cause__}\033[0m' if e.__cause__ else '\033[0m')
-        )
+        print(f'\033[31m{e.__class__.__name__}: {str(e)}.' + (f' Cause: {e.__cause__}\033[0m' if e.__cause__ else '\033[0m'))
         sys.exit(1)
+
 
 if __name__ == '__main__':
     run_cli()

@@ -3,28 +3,28 @@ from PIL import Image, ImageDraw
 from scipy.spatial import cKDTree
 import numpy as np
 
+
 class QuadtreeProcessor:
     def __init__(self,
         image: Image,
         min_region_size: int,
         dispersion_threshold: int,
+        target_resolution: tuple[int,int],
         palette: np.array
     ):
         self.logger = lg.getLogger('amig.quadtree')
-        self.image_array = np.array(image, dtype=np.float16)
+        self.image_array = np.array(image, dtype=np.float32)
         self.min_region_size = min_region_size
         self.dispersion_threshold = dispersion_threshold
-
+        self.target_resolution = target_resolution
         self.palette = palette
         self.color_tree = cKDTree(palette)
 
 
     def decompose(self, x: int, y: int, w: int, h: int) -> list:
-        # self.logger.debug(f'processing region: ({x};{y}) {w}x{h}')
-
         region = self.image_array[y:y+h, x:x+w]
         region_mean_color = np.mean(region, axis=(0, 1))
-        region_color_diff = region.astype(np.float16) - region_mean_color.astype(np.float16)
+        region_color_diff = region.astype(np.float32) - region_mean_color.astype(np.float32)
         region_dispersion = np.mean(np.sum(region_color_diff**2, axis=2))
         
         rects = []
@@ -48,16 +48,17 @@ class QuadtreeProcessor:
         return rects
     
     
-    def rects2int(self, rects: list) -> list:
+    def get_rects(self) -> list:
+        rects = self.decompose(0, 0, *self.target_resolution)
         return [
             (r[0], r[1], r[2], r[3], tuple(int(c) for c in r[4]))
             for r in rects
         ]
     
 
-    def recompose(self, target_resolution: tuple[int,int], rects: list) -> Image:
+    def recompose(self, rects: list) -> Image:
         self.logger.debug('recomposing image from rects')
-        image = Image.new('RGB', target_resolution, (0, 0, 0))
+        image = Image.new('RGB', self.target_resolution, (0, 0, 0))
         draw = ImageDraw.Draw(image)
 
         for rect in rects:

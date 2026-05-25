@@ -1,11 +1,3 @@
-from yamig.core.mlog import MlogGenerator
-from yamig.core.preprocessor import Preprocessor
-from yamig.core.quadtree import QuadtreeProcessor
-from yamig.core.schema import SchemaGenerator
+from importlib.metadata import version
 
-__all__ = [
-    'MlogGenerator',
-    'Preprocessor',
-    'QuadtreeProcessor',
-    'SchemaGenerator'
-]
+__version__ = version('yamig')
