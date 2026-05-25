@@ -1,11 +1,11 @@
+import re
+import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
-from yamig.core.main import Yamig
 from yamig import __version__
+from yamig.core.main import Yamig
 
-import sys
-import re
 
 class YamigCLI:
     def __init__(self):
@@ -282,7 +282,11 @@ def run_cli() -> None:
         sys.exit(0)
     
     except Exception as e:
-        print(f'\033[31m{e.__class__.__name__}: {str(e)}.' + (f' Cause: {e.__cause__}\033[0m' if e.__cause__ else '\033[0m'))
+        e_name = e.__class__.__name__
+        
+        print(f"\033[31m{e_name}: {str(e)}")
+        print(f"Cause: {e.__cause__}")
+
         sys.exit(1)
 
 

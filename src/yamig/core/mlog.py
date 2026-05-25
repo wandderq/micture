@@ -1,5 +1,6 @@
-import logging as lg
 import copy
+import logging as lg
+
 
 class MlogGenerator:
     def __init__(self, max_script_length: int, target_resolution: tuple[int, int]):

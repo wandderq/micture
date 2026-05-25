@@ -1,18 +1,18 @@
+import json
+import logging as lg
+import os
 from argparse import Namespace
+
+import numpy as np
 from PIL import Image
 from pymsch import Schematic
 
+from yamig import __version__
+from yamig.core.mlog import MlogGenerator
 from yamig.core.preprocessor import Preprocessor
 from yamig.core.quadtree import QuadtreeProcessor
-from yamig.core.mlog import MlogGenerator
 from yamig.core.schema import SchemaGenerator
 from yamig.utils.logging import setup_logger
-from yamig import __version__
-
-import logging as lg
-import numpy as np
-import json
-import os
 
 
 class Yamig:

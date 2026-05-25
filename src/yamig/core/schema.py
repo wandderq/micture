@@ -1,6 +1,7 @@
-from pymsch import Schematic, Block, ProcessorConfig, ProcessorLink, Content
-
 import logging as lg
+
+from pymsch import Block, Content, ProcessorConfig, ProcessorLink, Schematic
+
 
 class SchemaGenerator:
     def __init__(self,

@@ -1,7 +1,8 @@
 import logging as lg
+
+import numpy as np
 from PIL import Image, ImageDraw
 from scipy.spatial import cKDTree
-import numpy as np
 
 
 class QuadtreeProcessor:

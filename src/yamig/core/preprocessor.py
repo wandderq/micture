@@ -1,8 +1,8 @@
-from PIL import Image
+import logging as lg
 from pathlib import Path
 
-import logging as lg
 import numpy as np
+from PIL import Image
 
 
 class PreprocessorError(Exception):

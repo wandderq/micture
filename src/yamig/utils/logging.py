@@ -1,9 +1,9 @@
-from pathlib import Path
-from colorlog import ColoredFormatter
-from logging import Formatter, StreamHandler, FileHandler
-
 import logging as lg
 import sys
+from logging import FileHandler, Formatter, StreamHandler
+from pathlib import Path
+
+from colorlog import ColoredFormatter
 
 
 def setup_logger(level: int, log_filepath: Path | None):
