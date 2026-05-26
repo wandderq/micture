@@ -3,12 +3,12 @@ import logging as lg
 
 
 class MlogGenerator:
-    def __init__(self, max_script_length: int, target_resolution: tuple[int, int]):
+    def __init__(self, max_script_length: int, resolution: tuple[int, int]):
         self.logger = lg.getLogger('yamig.mlog-generator')
         self.max_script_length = max_script_length
         self.display_name = 'display1'
-        self.target_resolution = target_resolution
-    
+        self.resolution = resolution
+
 
     def generate_mlog(self, rects: list):
         rects = self.flip_coords(rects)
@@ -25,7 +25,7 @@ class MlogGenerator:
         for rect in rects:
             x, y, w, h, color = rect
 
-            flipped_rect = [x, self.target_resolution[1]-y-h, w, h, color]
+            flipped_rect = [x, self.resolution[1]-y-h, w, h, color]
             flipped_rects.append(flipped_rect)
 
         return flipped_rects
