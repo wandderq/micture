@@ -13,7 +13,7 @@ class QuadtreeProcessor:
         target_resolution: tuple[int,int],
         palette: np.array
     ):
-        self.logger = lg.getLogger('amig.quadtree')
+        self.logger = lg.getLogger('yamig.quadtree')
         self.image_array = np.array(image, dtype=np.float32)
         self.min_region_size = min_region_size
         self.dispersion_threshold = dispersion_threshold

@@ -10,7 +10,7 @@ class SchemaGenerator:
         schema_name: str,
         schema_description: str,
     ):
-        self.logger = lg.getLogger('amig.schema-generator')
+        self.logger = lg.getLogger('yamig.schema-generator')
         self.scripts = scripts
         self.target_resolution = target_resolution
         self.schema_name = schema_name

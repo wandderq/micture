@@ -15,7 +15,7 @@ class Preprocessor:
         target_resolution: tuple[int,int],
         max_colors: int
     ):
-        self.logger = lg.getLogger('amig.preprocessor')
+        self.logger = lg.getLogger('yamig.preprocessor')
 
         self.input_path = input_path
         self.target_resolution = target_resolution

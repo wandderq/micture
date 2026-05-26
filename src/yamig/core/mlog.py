@@ -4,7 +4,7 @@ import logging as lg
 
 class MlogGenerator:
     def __init__(self, max_script_length: int, target_resolution: tuple[int, int]):
-        self.logger = lg.getLogger('amig.mlog-generator')
+        self.logger = lg.getLogger('yamig.mlog-generator')
         self.max_script_length = max_script_length
         self.display_name = 'display1'
         self.target_resolution = target_resolution
