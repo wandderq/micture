@@ -23,7 +23,7 @@ class YamigCLI:
         argparser.add_argument(
             'input_path',
             type=Path,
-            help='input image path'
+            help='input image path (PNG/JPG)'
         )
 
         argparser.add_argument(
@@ -31,7 +31,7 @@ class YamigCLI:
             type=Path,
             default=None,
             dest='output_path',
-            help='output directory (default: derived from args)'
+            help='output directory (default: derived from input)'
         )
 
         argparser.add_argument(
@@ -61,7 +61,7 @@ class YamigCLI:
             type=int,
             default=64,
             dest='max_colors',
-            help='max target image colors (default: 64) (up to 15%% loss)'
+            help='max colors in output (default: 64) (up to 15%% loss)'
         )
 
         argparser.add_argument(
@@ -77,7 +77,7 @@ class YamigCLI:
             type=int,
             default=8,
             dest='min_region_size',
-            help='min quadtree region size (px) (default: 8)'
+            help='min quadtree region size in pixels (default: 8)'
         )
 
         argparser.add_argument(
@@ -85,7 +85,7 @@ class YamigCLI:
             type=int,
             default=1000,
             dest='max_script_len',
-            help='max lines of script in each processor (default: 100)'
+            help='max lines per processor script (default: 1000)'
         )
 
         argparser.add_argument(
@@ -93,7 +93,7 @@ class YamigCLI:
             type=str,
             default=None,
             dest='schema_name',
-            help='schematic name (default: derived from args)'
+            help='schematic name (default: derived from input)'
         )
 
         argparser.add_argument(
@@ -101,7 +101,7 @@ class YamigCLI:
             type=str,
             default=None,
             dest='schema_desc',
-            help='schematic description (default: derived from args)'
+            help='schematic description (default: derived from input)'
         )
     
         log_group.add_argument(
@@ -115,7 +115,7 @@ class YamigCLI:
             '-q', '--quiet',
             dest='quiet',
             action='store_true',
-            help='quiet mode (warn/err logs)'
+            help='quiet mode (warnings/errors only)'
         )
 
         log_group.add_argument(

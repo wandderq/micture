@@ -1,61 +1,79 @@
 # yamig
-yet another mindustry image generator
+**Yet Another Mindustry Image Generator** — converts PNG/JPG images into Mindustry schematics.
 
-yamig uses tiled logic displays and microprocessors
+**⚠️ Project Status: WIP** - the tool may contain bugs and rough edges.
 
-for now it only works in CLI (mby i'll make a mod for Mindustry)
 
-**the project is still raw and contains many errors, inaccuracies, workarounds, and typos (feel free to open bug reports on GitHub)**
+## Features
+- works only with **tile displays** and **micro processors**
+- fully customizable schematic generation:
+  - image resolution & scaling
+  - color quantization limits
+  - quadtree optimization parameters
+  - schematic metadata (name, description)
+  - output format options
+
+
+## Installation
+Python 3.12 or higher is required.
+
+### From GitHub (recommended via pipx)
+```bash
+pipx install git+https://github.com/wandderq/yamig.git
+```
+
+
+## Dependencies
+- `pillow` - image processing
+- `numpy` - array operations
+- `scipy` - cKDTree (will be removed in future)
+
 
 ## Usage
+### Positional arguments
+| argument | description |
+|----------|-------------|
+|`input_path`|input image path (PNG/JPG)|
+
+### Options
+| option | description |
+|--------|-------------|
+|`-h, --help`|show help message|
+|`-o, --output`|output directory (default: derived from input)|
+|`-O, --onefile`|save only `.msch` file|
+|`-C, --copy-to-clipboard`|copy schematic to clipboard|
+|`-r, --resolution`|target resolution (format: `WxH[b/px]`) (default: `5x5b`)|
+|`-c, --max-colors`|max colors in output (default: `64`) (up to 15% loss)|
+|`-d, --dispersion-threshold`|quadtree color dispersion threshold (default: `600`)|
+|`-s, --min-region-size`|min quadtree region size in pixels (default: `8`)|
+|`-l, --max-script-len`|max lines per processor script (default: `1000`)|
+|`-N, --schema-name`|schematic name (default: derived from input)|
+|`-D, --schema-desc`|schematic description (default: derived from input)|
+|`-v, --verbose`|verbose mode (debug logs)|
+|`-q, --quiet`|quiet mode (warnings/errors only)|
+|`--silent`|silent mode (no logs)|
+
+
+## Examples
+1. basic usage
+```bash
+yamig picture.jpg 
 ```
-usage: yamig [-h] [-o OUTPUT_PATH] [-O] [-C] [-r RESOLUTION] [-c MAX_COLORS] [-t DISPERSION_THRESHOLD]
-             [-s MIN_REGION_SIZE] [-l MAX_SCRIPT_LEN] [-N SCHEMA_NAME] [-D SCHEMA_DESC] [-v | -q | --silent]
-             input_path
-
-yet another mindustry image generator v0.1.1
-
-positional arguments:
-  input_path            input image path
-
-options:
-  -h, --help            show this help message and exit
-  -o, --output OUTPUT_PATH
-                        output directory (default: derived from args)
-  -O, --onefile         save only .msch file
-  -C, --copy-to-clipboard
-                        copy schematic to clipboard
-  -r, --resolution RESOLUTION
-                        target resolution (format: WxH[b/px]) (default: 5x5b)
-  -c, --max-colors MAX_COLORS
-                        max target image colors (default: 64) (up to 15% loss)
-  -t, --dispersion-threshold DISPERSION_THRESHOLD
-                        quadtree color dispersion threshold (default: 600)
-  -s, --min-region-size MIN_REGION_SIZE
-                        min quadtree region size (px) (default: 8)
-  -l, --max-script-len MAX_SCRIPT_LEN
-                        max lines of script in each processor (default: 100)
-  -N, --schema-name SCHEMA_NAME
-                        schematic name (default: derived from args)
-  -D, --schema-desc SCHEMA_DESC
-                        schematic description (default: derived from args)
-  -v, --verbose         verbose mode (debug logs)
-  -q, --quiet           quiet mode (warn/err logs)
-  --silent              silent mode (no logs)
+2. custom resolution and output
+```bash
+yamig picture.jpg --onefile -o . -r  800x600px
 ```
-## TODO
-- [ ] find and fix typos
-- [ ] more logging
-- [x] -q/--quiet mode
-- [ ] schema tags
-- [x] onefile mode (without preoprocessed.jpg, recomposed.jpg, scripts/, etc.)
-- [x] -C/--copy-to-clipboard instead of automatically copying
-- [ ] make this readme more organized and readable
-- [ ] remove scipy dependency (np.argmin instead of cKDTree)
-- [ ] use uint8 instead of float32
+3. higher quality
+```bash
+yamig picture.jpg -r 16x9b -c 128 -s 2 -d 200
+```
+4. accelerated rendering (but more processors)
+```bash
+yamig picture.jpg -l 300 -N "fast picture"
+```
 
-## Licensing
-this project is distributed under the **MIT License**
+## License
+Distributed under [MIT License](https://github.com/wandderq/yamig/blob/main/LICENSE) - free to use, modify, and distribute
 
-full license text: [LICENSE](https://github.com/wandderq/yamig/blob/main/LICENSE)
-
+---
+<p align=center><i>because there can never be enough mindustry image generators</i></p>
