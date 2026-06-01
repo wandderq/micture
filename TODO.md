@@ -8,3 +8,4 @@
 - [x] make the readme more organized and readable
 - [ ] remove scipy dependency (np.argmin instead of cKDTree)
 - [ ] use uint8 instead of float32
+- [ ] add `logic-display` / `large-logic-display` support
