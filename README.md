@@ -67,7 +67,7 @@ yamig picture.jpg --onefile -o . -r  800x600px
 ```bash
 yamig picture.jpg -r 16x9b -c 128 -s 2 -d 200
 ```
-4. accelerated rendering (but more processors)
+4. accelerated in-game rendering (but more processors)
 ```bash
 yamig picture.jpg -l 300 -N "fast picture"
 ```
