@@ -11,7 +11,6 @@ dependencies = [
     "numpy>=2.4.6",
     "pillow>=12.2.0",
     "pymsch>=0.0.17",
-    "scipy>=1.17.1",
 ]
 
 [project.scripts]

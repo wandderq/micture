@@ -2,7 +2,6 @@ import logging as lg
 
 import numpy as np
 from PIL import Image, ImageDraw
-from scipy.spatial import cKDTree
 
 
 class QuadtreeProcessor:
@@ -19,7 +18,11 @@ class QuadtreeProcessor:
         self.dispersion_threshold = dispersion_threshold
         self.target_resolution = target_resolution
         self.palette = palette
-        self.color_tree = cKDTree(palette)
+    
+
+    def _find_closest_color(self, color):
+        distances = np.sum((self.palette - color) ** 2, axis=1)
+        return np.argmin(distances)
 
 
     def decompose(self, x: int, y: int, w: int, h: int) -> list:
@@ -34,7 +37,7 @@ class QuadtreeProcessor:
             or h <= self.min_region_size
             or region_dispersion <= self.dispersion_threshold
         ):
-            _, idx = self.color_tree.query(region_mean_color)
+            idx = self._find_closest_color(region_mean_color)
             rect_color = tuple(self.palette[idx])
             rects.append((x, y, w, h, rect_color))
         

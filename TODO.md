@@ -6,6 +6,5 @@
 - [x] onefile mode (without preoprocessed.jpg, recomposed.jpg, scripts/, etc.)
 - [x] -C/--copy-to-clipboard instead of automatically copying
 - [x] make the readme more organized and readable
-- [ ] remove scipy dependency (np.argmin instead of cKDTree)
-- [ ] use uint8 instead of float32
+- [x] remove scipy dependency (np.argmin instead of cKDTree)
 - [ ] add `logic-display` / `large-logic-display` support
