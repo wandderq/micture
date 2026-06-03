@@ -12,19 +12,10 @@ from yamig.core.mlog import MlogGenerator
 from yamig.core.preprocessor import Preprocessor
 from yamig.core.quadtree import QuadtreeProcessor
 from yamig.core.schema import SchemaGenerator
-from yamig.utils.logging import setup_logger
 
 
 class Yamig:
     def __init__(self, args: Namespace):
-        setup_logger(
-            lg.DEBUG if args.verbose
-            else lg.WARNING if args.quiet
-            else 0 if args.silent
-            else lg.INFO,
-
-            (args.output_path / 'yamig.log') if not args.onefile else None
-        )
         self.logger = lg.getLogger('yamig')
         self.args = args
     

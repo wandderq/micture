@@ -5,6 +5,7 @@ from pathlib import Path
 
 from yamig import __version__
 from yamig.core.main import Yamig
+from yamig.utils.logging import setup_logger
 
 
 class YamigCLI:
@@ -249,6 +250,7 @@ class YamigCLI:
 
     def run(self) -> None:
         args = self.argparser.parse_args()
+        setup_logger(args)
 
         args.input_path = self._parse_input_path(args.input_path)
         args.output_path = self._parse_output_path(args.output_path, args.input_path)
