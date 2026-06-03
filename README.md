@@ -26,7 +26,6 @@ pipx install git+https://github.com/wandderq/yamig.git
 ## Dependencies
 - `pillow` - image processing
 - `numpy` - array operations
-- `scipy` - cKDTree (will be removed in future)
 - `pymsch` - schematic generating
 
 ## Usage
