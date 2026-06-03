@@ -6,13 +6,13 @@ from pymsch import Block, Content, ProcessorConfig, ProcessorLink, Schematic
 class SchemaGenerator:
     def __init__(self,
         scripts: list,
-        target_resolution: tuple[int,int],
+        resolution: tuple[int,int],
         schema_name: str,
         schema_description: str,
     ):
         self.logger = lg.getLogger('yamig.schema-generator')
         self.scripts = scripts
-        self.target_resolution = target_resolution
+        self.resolution = resolution
         self.schema_name = schema_name
         self.schema_description = schema_description
     
@@ -31,8 +31,8 @@ class SchemaGenerator:
         
     
     def add_displays(self, schema: Schematic) -> None:
-        display_x = self.target_resolution[0] // 32
-        display_y = self.target_resolution[1] // 32
+        display_x = self.resolution[0] // 32
+        display_y = self.resolution[1] // 32
 
         for y in range(display_y):
             for x in range(display_x):
@@ -40,7 +40,7 @@ class SchemaGenerator:
     
 
     def add_processors(self, schema: Schematic) -> None:
-        max_cols = self.target_resolution[0] // 32
+        max_cols = self.resolution[0] // 32
 
         for script_i, script in enumerate(self.scripts):
             row = script_i // max_cols

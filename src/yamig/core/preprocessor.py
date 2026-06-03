@@ -12,13 +12,13 @@ class PreprocessorError(Exception):
 class Preprocessor:
     def __init__(self, 
         input_path: Path,
-        target_resolution: tuple[int,int],
+        resolution: tuple[int,int],
         max_colors: int
     ):
         self.logger = lg.getLogger('yamig.preprocessor')
 
         self.input_path = input_path
-        self.target_resolution = target_resolution
+        self.resolution = resolution
         self.max_colors = max_colors
 
 
@@ -40,7 +40,7 @@ class Preprocessor:
 
         self.logger.debug(f'unique colors: {len(palette)}')
 
-        self.logger.info(f'resizing image to the target resolution: {self.target_resolution}')
-        img = img.resize(self.target_resolution, Image.Resampling.LANCZOS)
+        self.logger.info(f'resizing image to the target resolution: {self.resolution}')
+        img = img.resize(self.resolution, Image.Resampling.LANCZOS)
 
         return img, palette

@@ -9,14 +9,14 @@ class QuadtreeProcessor:
         image: Image,
         min_region_size: int,
         dispersion_threshold: int,
-        target_resolution: tuple[int,int],
+        resolution: tuple[int,int],
         palette: np.array
     ):
         self.logger = lg.getLogger('yamig.quadtree')
         self.image_array = np.array(image, dtype=np.float32)
         self.min_region_size = min_region_size
         self.dispersion_threshold = dispersion_threshold
-        self.target_resolution = target_resolution
+        self.resolution = resolution
         self.palette = palette
     
 
@@ -53,7 +53,7 @@ class QuadtreeProcessor:
     
     
     def get_rects(self) -> list:
-        rects = self.decompose(0, 0, *self.target_resolution)
+        rects = self.decompose(0, 0, *self.resolution)
         return [
             (r[0], r[1], r[2], r[3], tuple(int(c) for c in r[4]))
             for r in rects
@@ -62,7 +62,7 @@ class QuadtreeProcessor:
 
     def recompose(self, rects: list) -> Image:
         self.logger.debug('recomposing image from rects')
-        image = Image.new('RGB', self.target_resolution, (0, 0, 0))
+        image = Image.new('RGB', self.resolution, (0, 0, 0))
         draw = ImageDraw.Draw(image)
 
         for rect in rects:
