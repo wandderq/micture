@@ -250,7 +250,6 @@ class YamigCLI:
 
     def run(self) -> None:
         args = self.argparser.parse_args()
-        setup_logger(args)
 
         args.input_path = self._parse_input_path(args.input_path)
         args.output_path = self._parse_output_path(args.output_path, args.input_path)
@@ -273,6 +272,7 @@ class YamigCLI:
             args.min_region_size
         )
 
+        setup_logger(args)
         yamig = Yamig(args)
         yamig.run()
 

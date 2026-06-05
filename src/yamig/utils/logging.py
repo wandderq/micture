@@ -22,7 +22,7 @@ def setup_logger(args: Namespace):
 
     root_logger = lg.getLogger()
     root_logger.handlers.clear()
-    root_logger.setLevel(level)
+    root_logger.setLevel(lg.DEBUG)
     
     # if not silent
     if level != 0:
