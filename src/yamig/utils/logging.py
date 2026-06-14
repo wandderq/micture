@@ -1,26 +1,24 @@
 import logging as lg
 import sys
+import time
 from argparse import Namespace
-from logging import FileHandler, Formatter, StreamHandler
-from pathlib import Path
+from collections.abc import Callable
+from functools import wraps
+from logging import StreamHandler
+from typing import ParamSpec, TypeVar
 
 from colorlog import ColoredFormatter
 
 
-def setup_logger(args: Namespace):
-    if args.verbose:
-        level = lg.DEBUG
-    
-    elif args.quiet:
-        level = lg.WARNING
-    
-    elif args.silent:
-        level = 0
-    
-    else:
-        level = lg.INFO
+def setup_logger(args: Namespace) -> None:
+    level = (
+        lg.DEBUG if args.verbose else
+        lg.WARNING if args.quiet else
+        0 if args.silent else
+        lg.INFO
+    )
 
-    root_logger = lg.getLogger()
+    root_logger = lg.getLogger("yamig")
     root_logger.handlers.clear()
     root_logger.setLevel(lg.DEBUG)
     
@@ -31,35 +29,36 @@ def setup_logger(args: Namespace):
         stream_handler.setFormatter(
             ColoredFormatter(
                 fmt="{log_color}{levelname}{reset}:{name} {message}",
-                style='{',
+                style="{",
                 log_colors={
-                    'DEBUG': 'blue',
-                    'INFO': 'green',
-                    'WARNING': 'yellow',
-                    'ERROR': 'red'
+                    "DEBUG": "blue",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "red"
                 }
             )
         )
         stream_handler.setLevel(level)
         root_logger.addHandler(stream_handler)
 
-        # file_handler
-        log_filepath = None if args.onefile else (args.output_path / 'yamig.log')
+P = ParamSpec("P")
+R = TypeVar("R")
 
-        if log_filepath is not None:
-            file_handler = FileHandler(
-                filename=log_filepath,
-                mode='w',
-                encoding='utf-8'
-            )
-            file_handler.setFormatter(
-                Formatter(
-                    fmt="{asctime} {name} {levelname}: {message}",
-                    style='{',
-                    datefmt="%Y.%m.%d-%H:%M:%S"
-                )
-            )
-            file_handler.setLevel(lg.DEBUG)
-            root_logger.addHandler(file_handler)
+def timeit(func: Callable) -> Callable:
+    
+    timeit_logger = lg.getLogger("yamig.timeit")
+    qualname = func.__qualname__
 
-        
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        start_time = time.time()
+
+        result = func(*args, **kwargs)
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        timeit_logger.debug("%s took %.4f to execute", qualname, elapsed_time)
+
+        return result
+    return wrapper

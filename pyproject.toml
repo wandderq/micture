@@ -1,6 +1,6 @@
 [project]
 name = "yamig"
-version = "0.2.0"
+version = "1.0.0"
 description = "yet another mindustry image generator"
 authors = [
     { name = "wandderq", email = "wanddr.qq@gmail.com" }
@@ -22,4 +22,9 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 100
-lint.select = ["I", "B", "E"]
+lint.select = [
+    "Q", "B", "E", "W", "I", "F",
+    "G", "T", "UP", "EM", "SIM",
+    "PTH", "ANN", "RET", "TRY"
+]
+lint.ignore = ["W293"]

@@ -2,37 +2,40 @@ import logging as lg
 
 from pymsch import Block, Content, ProcessorConfig, ProcessorLink, Schematic
 
+from yamig.utils.logging import timeit
+from yamig.utils.params import YamigParams
+
 
 class SchemaGenerator:
-    def __init__(self,
-        scripts: list,
-        resolution: tuple[int,int],
-        schema_name: str,
-        schema_description: str,
-    ):
-        self.logger = lg.getLogger('yamig.schema-generator')
+    def __init__(self, scripts: list, params: YamigParams) -> None:
+        self.logger = lg.getLogger("yamig.schema-generator")
         self.scripts = scripts
-        self.resolution = resolution
-        self.schema_name = schema_name
-        self.schema_description = schema_description
+        self.params = params
     
 
-    def generate_schema(self) -> Schematic:
+    @timeit
+    def run(self) -> Schematic:
         schema = Schematic()
-        schema.set_tag("name", self.schema_name)
+        schema.set_tag("name", self.params.schema_name)
 
-        if self.schema_description is not None:
-            schema.set_tag("description", self.schema_description)
+        if self.params.schema_description is not None:
+            schema.set_tag("description", self.params.schema_description)
         
         self.add_displays(schema)
         self.add_processors(schema)
+
+        schema.write_file(self.params.output_path)
+        self.logger.info("schema saved to %s", self.params.output_path)
+
+        if self.params.to_clipboard:
+            schema.write_clipboard()
 
         return schema
         
     
     def add_displays(self, schema: Schematic) -> None:
-        display_x = self.resolution[0] // 32
-        display_y = self.resolution[1] // 32
+        display_x = self.params.resolution[0] // 32
+        display_y = self.params.resolution[1] // 32
 
         for y in range(display_y):
             for x in range(display_x):
@@ -40,7 +43,7 @@ class SchemaGenerator:
     
 
     def add_processors(self, schema: Schematic) -> None:
-        max_cols = self.resolution[0] // 32
+        max_cols = self.params.resolution[0] // 32
 
         for script_i, script in enumerate(self.scripts):
             row = script_i // max_cols
@@ -52,5 +55,5 @@ class SchemaGenerator:
             link_x, link_y = 0, 0 - proc_y
 
             link = ProcessorLink(link_x, link_y, "display")
-            config = ProcessorConfig('\n'.join(script), [link])
+            config = ProcessorConfig("\n".join(script), [link])
             schema.add_block(Block(Content.MICRO_PROCESSOR, proc_x, proc_y, config, 0))
