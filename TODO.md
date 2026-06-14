@@ -14,3 +14,7 @@
   - [ ] add `-d/--debug` option, which will save intermediate files
   - [ ] remove `--onefile` option
 
+## features/yamig-params
+- [ ] update README.md with relevant information
+- [ ] more bug tests (mby write tests)
+- [ ] version bump
