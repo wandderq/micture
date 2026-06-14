@@ -175,9 +175,7 @@ class YamigCLI:
             args.resolution = (width, height)
         
         elif suffix == 'd':
-            self.logger.warning(
-                'tile-logic-display is only supported display for now! using 32px multiplier'
-            )
+            print('tile-logic-display is only supported display for now! using 32px multiplier')
             args.resolution = (width * 32, height * 32)
             #TODO: use actual display size (for features/all-displays-support)
         else:
@@ -190,7 +188,6 @@ class YamigCLI:
 
         # logger
         setup_logger(args)
-        self.logger = lg.getLogger('yamig.cli')
 
         # more arparse
         self._parse_output_path(args)

@@ -10,17 +10,12 @@ from colorlog import ColoredFormatter
 
 
 def setup_logger(args: Namespace):
-    if args.verbose:
-        level = lg.DEBUG
-    
-    elif args.quiet:
-        level = lg.WARNING
-    
-    elif args.silent:
-        level = 0
-    
-    else:
-        level = lg.INFO
+    level = (
+        lg.DEBUG if args.verbose else
+        lg.WARNING if args.quiet else
+        0 if args.silent else
+        lg.INFO
+    )
 
     root_logger = lg.getLogger('yamig')
     root_logger.handlers.clear()
@@ -46,7 +41,6 @@ def setup_logger(args: Namespace):
         root_logger.addHandler(stream_handler)
 
 
-# use only with methods
 def timeit(func):
     timeit_logger = lg.getLogger('yamig.timeit')
     qualname = func.__qualname__

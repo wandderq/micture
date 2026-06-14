@@ -1,5 +1,6 @@
 import copy
 import logging as lg
+import os
 
 from yamig.utils.logging import timeit
 from yamig.utils.params import YamigParams
@@ -25,7 +26,7 @@ class MlogGenerator:
             # remove existing scripts
             for script_path in scripts_path.iterdir():
                 if script_path.is_file() and script_path.suffix == '.mlog':
-                    self.logger.warning(f'removing old script: {str(script_path)}')
+                    self.logger.debug(f'removing old script: {str(script_path)}')
                     os.remove(script_path)
             
             # save scripts
