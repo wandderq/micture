@@ -46,12 +46,12 @@ def setup_logger(args: Namespace):
         root_logger.addHandler(stream_handler)
 
 
-timeit_logger = lg.getLogger('yamig.timeit')
-
 # use only with methods
 def timeit(func):
+    timeit_logger = lg.getLogger('yamig.timeit')
+    qualname = func.__qualname__
     @wraps(func)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(*args, **kwargs):
         start_time = time.time()
 
         result = func(*args, **kwargs)
@@ -59,7 +59,7 @@ def timeit(func):
         end_time = time.time()
         elapsed_time = end_time - start_time
 
-        timeit_logger.debug(f'{self.__class__.__name__}.{func.__name__} took {elapsed_time:.4f}s to execute')
+        timeit_logger.debug(f'{qualname} took {elapsed_time:.4f}s to execute')
 
         return result
-    return func
+    return wrapper
