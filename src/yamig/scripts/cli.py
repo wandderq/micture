@@ -37,7 +37,7 @@ class YamigCLI:
             dest="output_path",
             type=Path,
             default=None,
-            help="output path (default: derived from args)"
+            help="output path (default: derived from input)"
         )
 
         argparser.add_argument(
@@ -45,7 +45,7 @@ class YamigCLI:
             dest="debug_path",
             type=Path,
             default=None,
-            help="debug path (default: None) (None = no intermediate files)"
+            help="debug path (for intermediate files) (default: None)"
         )
         
         argparser.add_argument(
@@ -61,8 +61,8 @@ class YamigCLI:
             type=str,
             default="300x300px",
             help=(
-                "target resolution. "
-                "format: WxH[px/d] "
+                "target resolution "
+                "(format: WxH[px/d]) "
                 "(px - pixels, d - displays) "
                 "(default: 300x300px)"
             )
@@ -89,7 +89,7 @@ class YamigCLI:
             dest="min_region_size",
             type=int,
             default=4,
-            help="min image region size (px) (default: 4) (>0)"
+            help="min quadtree region size (px) (default: 4) (>0)"
         )
 
         argparser.add_argument(
@@ -180,8 +180,9 @@ class YamigCLI:
 
         if suffix == "px":
             args.resolution = (width, height)
-
-        args.resolution = (width * 32, height * 32)
+        
+        else:
+            args.resolution = (width * 32, height * 32)
         #TODO: use actual display size (for features/all-displays-support)
 
 

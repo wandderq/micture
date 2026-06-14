@@ -10,11 +10,6 @@
 - [ ] add `logic-display` / `large-logic-display` support
 - [ ] add `logic-processor` and `hyper-processor` support
 - [ ] try to create GUI (tkinter/qt)
-- [ ] make onefile the primary mode:
-  - [ ] add `-d/--debug` option, which will save intermediate files
-  - [ ] remove `--onefile` option
-
-## features/yamig-params
-- [ ] update README.md with relevant information
-- [ ] more bug tests (mby write tests)
-- [ ] version bump
+- [x] make onefile the primary mode:
+  - [x] add `--debug` option, which will save intermediate files
+  - [x] remove `--onefile` option
