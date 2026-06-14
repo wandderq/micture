@@ -5,7 +5,8 @@ from typing import Literal
 from pymsch import Content
 
 from yamig import __version__
-from yamig.utils.const import DISPLAY_RESOLUTIONS, DISPLAYS
+from yamig.utils.const import DISPLAY_RESOLUTIONS
+from yamig.utils.exceptions import FileExpectedError
 
 
 @dataclass
@@ -18,7 +19,7 @@ class YamigParams:
 
     # Image params
     resolution: tuple[int, int] # in px
-    max_colors: int 
+    max_colors: int
     dispersion_threshold: int
     min_region_size: int
 
@@ -37,39 +38,44 @@ class YamigParams:
     schema_name: str | None
     schema_description: str | None
 
-    def validate_input_path(self):
+
+    def validate_input_path(self) -> None:
         self.input_path = Path(self.input_path).absolute()
 
         if not self.input_path.exists():
-            raise FileNotFoundError(f'Input file {self.input_path} not found!')
+            raise FileNotFoundError(self.input_path)
         
         if not self.input_path.is_file():
-            raise FileNotFoundError(f'Input file {self.input_path} is not file!')
+            raise FileExpectedError(self.input_path)
     
-    def validate_output_path(self):
+
+    def validate_output_path(self) -> None:
         self.output_path = Path(self.output_path).absolute()
 
         self.output_path.parent.mkdir(exist_ok=True, parents=True)
         self.output_path.touch(exist_ok=True)
     
-    def validate_debug_path(self):
+
+    def validate_debug_path(self) -> None:
         if self.debug_path is None:
             return
         
         self.debug_path = Path(self.debug_path).absolute()
         self.debug_path.mkdir(parents=True, exist_ok=True)
-    
-    def validate_display(self):
+
+
+    def validate_display(self) -> None:
         if self.display not in (
             Content.TILE_LOGIC_DISPLAY,
             Content.LOGIC_DISPLAY,
             Content.LARGE_LOGIC_DISPLAY
         ):
-            raise ValueError(f'Invalid display: {self.display}')
+            raise ValueError(self.display)
     
-    def validate_resolution(self):
+
+    def validate_resolution(self) -> None:
         if self.resolution[0] <= 0 or self.resolution[1] <= 0:
-            raise ValueError(f'Resolution cannot be lower than 1, got {self.resolution}')
+            raise ValueError(self.resolution)
         
         display_resolution = DISPLAY_RESOLUTIONS[self.display]
 
@@ -82,43 +88,48 @@ class YamigParams:
 
         #TODO: resolution (in blocks) higher than processor range check
     
-    def validate_max_colors(self):
-        if not (1 <= self.max_colors <= 255):
-            raise ValueError(f'Max colors value must be 1-255, got {self.max_colors}')
-    
-    def validate_dispersion_threshold(self):
-        if not self.dispersion_threshold > 0:
-            raise ValueError(
-                f'Dispersion threshold value must be >0, got {self.dispersion_threshold}'
-            )
 
-    def validate_min_region_size(self):
+    def validate_max_colors(self) -> None:
+        if not (1 <= self.max_colors <= 255):
+            raise ValueError(self.max_colors)
+    
+
+    def validate_dispersion_threshold(self) -> None:
+        if not self.dispersion_threshold > 0:
+            raise ValueError(self.dispersion_threshold)
+
+
+    def validate_min_region_size(self) -> None:
         if not self.min_region_size > 0:
-            raise ValueError(f'Min region size value must be >0, got {self.min_region_size}')
+            raise ValueError(self.min_region_size)
  
-    def validate_processor(self):
+
+    def validate_processor(self) -> None:
         if self.processor not in (
             Content.MICRO_PROCESSOR,
             Content.LOGIC_PROCESSOR,
             Content.HYPER_PROCESSOR,
         ):
-            raise ValueError(f'Invalid processor: {self.processor}')
-    
-    def validate_max_script_len(self):
+            raise ValueError(self.processor)
+
+
+    def validate_max_script_len(self) -> None:
         if not (3 <= self.max_script_len <= 1000):
-            raise ValueError(f'Max script length value must be 3-1000, got {self.max_script_len}')
-    
-    def validate_schema_name(self):
+            raise ValueError(self.max_script_len)
+
+
+    def validate_schema_name(self) -> None:
         if self.schema_name is None:
             self.schema_name = (
                 f"{self.input_path.stem} "
                 f"{self.resolution[0]}x{self.resolution[1]}"
             )
-    
-    def validate_schema_description(self):
+
+
+    def validate_schema_description(self) -> None:
         if self.schema_description is None:
             self.schema_description = (
-                f"File: {str(self.input_path.name)}\n"
+                f"File: {self.input_path.name}\n"
                 f"Resolution: {self.resolution[0]}x{self.resolution[1]}\n"
                 f"Display: {self.display.name}\n"
                 f"Processor: {self.processor.name}\n"
@@ -134,8 +145,7 @@ class YamigParams:
         )
     
 
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.validate_input_path()
         self.validate_output_path()
         self.validate_debug_path()

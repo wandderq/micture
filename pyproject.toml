@@ -22,4 +22,9 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 100
-lint.select = ["I", "B", "E"]
+lint.select = [
+    "Q", "B", "E", "W", "I", "F",
+    "G", "T", "UP", "EM", "SIM",
+    "PTH", "ANN", "RET", "TRY"
+]
+lint.ignore = ["W293"]

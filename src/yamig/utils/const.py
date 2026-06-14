@@ -1,15 +1,15 @@
 from pymsch import Content
 
 DISPLAYS = {
-    'tile': Content.TILE_LOGIC_DISPLAY,
-    'normal': Content.LOGIC_DISPLAY,
-    'large': Content.LARGE_LOGIC_DISPLAY,
+    "tile": Content.TILE_LOGIC_DISPLAY,
+    "normal": Content.LOGIC_DISPLAY,
+    "large": Content.LARGE_LOGIC_DISPLAY,
 }
 
 PROCESSORS = {
-    'micro': Content.MICRO_PROCESSOR,
-    'logic': Content.LOGIC_PROCESSOR,
-    'hyper': Content.HYPER_PROCESSOR,
+    "micro": Content.MICRO_PROCESSOR,
+    "logic": Content.LOGIC_PROCESSOR,
+    "hyper": Content.HYPER_PROCESSOR,
 }
 
 DISPLAY_RESOLUTIONS = {

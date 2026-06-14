@@ -1,11 +1,6 @@
-import json
 import logging as lg
-import os
-from argparse import Namespace
-
-import numpy as np
-from PIL import Image
-from pymsch import Schematic
+from dataclasses import asdict
+from pprint import pformat
 
 from yamig import __version__
 from yamig.core.mlog import MlogGenerator
@@ -16,14 +11,14 @@ from yamig.utils.params import YamigParams
 
 
 class Yamig:
-    def __init__(self, params: YamigParams):
-        self.logger = lg.getLogger('yamig.core')
+    def __init__(self, params: YamigParams) -> None:
+        self.logger = lg.getLogger("yamig.core")
         self.params = params
     
     
     def run(self) -> None:
-        self.logger.info(f'yamig v{__version__}')
-        self.logger.debug(f'params: {self.params}')
+        self.logger.info("yamig v%s", __version__)
+        self.logger.debug(pformat(asdict(self.params)))
 
         # preprocessor
         image_array, image_palette = Preprocessor(self.params).run()

@@ -7,11 +7,8 @@ from yamig.utils.params import YamigParams
 
 
 class SchemaGenerator:
-    def __init__(self,
-        scripts: list,
-        params: YamigParams
-    ):
-        self.logger = lg.getLogger('yamig.schema-generator')
+    def __init__(self, scripts: list, params: YamigParams) -> None:
+        self.logger = lg.getLogger("yamig.schema-generator")
         self.scripts = scripts
         self.params = params
     
@@ -28,7 +25,7 @@ class SchemaGenerator:
         self.add_processors(schema)
 
         schema.write_file(self.params.output_path)
-        self.logger.info(f'schema saved to {str(self.params.output_path)}')
+        self.logger.info("schema saved to %s", self.params.output_path)
 
         if self.params.to_clipboard:
             schema.write_clipboard()
@@ -58,5 +55,5 @@ class SchemaGenerator:
             link_x, link_y = 0, 0 - proc_y
 
             link = ProcessorLink(link_x, link_y, "display")
-            config = ProcessorConfig('\n'.join(script), [link])
+            config = ProcessorConfig("\n".join(script), [link])
             schema.add_block(Block(Content.MICRO_PROCESSOR, proc_x, proc_y, config, 0))

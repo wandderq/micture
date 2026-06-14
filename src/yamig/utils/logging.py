@@ -2,14 +2,15 @@ import logging as lg
 import sys
 import time
 from argparse import Namespace
+from collections.abc import Callable
 from functools import wraps
-from logging import FileHandler, Formatter, StreamHandler
-from pathlib import Path
+from logging import StreamHandler
+from typing import ParamSpec, TypeVar
 
 from colorlog import ColoredFormatter
 
 
-def setup_logger(args: Namespace):
+def setup_logger(args: Namespace) -> None:
     level = (
         lg.DEBUG if args.verbose else
         lg.WARNING if args.quiet else
@@ -17,7 +18,7 @@ def setup_logger(args: Namespace):
         lg.INFO
     )
 
-    root_logger = lg.getLogger('yamig')
+    root_logger = lg.getLogger("yamig")
     root_logger.handlers.clear()
     root_logger.setLevel(lg.DEBUG)
     
@@ -28,24 +29,28 @@ def setup_logger(args: Namespace):
         stream_handler.setFormatter(
             ColoredFormatter(
                 fmt="{log_color}{levelname}{reset}:{name} {message}",
-                style='{',
+                style="{",
                 log_colors={
-                    'DEBUG': 'blue',
-                    'INFO': 'green',
-                    'WARNING': 'yellow',
-                    'ERROR': 'red'
+                    "DEBUG": "blue",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "red"
                 }
             )
         )
         stream_handler.setLevel(level)
         root_logger.addHandler(stream_handler)
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def timeit(func):
-    timeit_logger = lg.getLogger('yamig.timeit')
+def timeit(func: Callable) -> Callable:
+    
+    timeit_logger = lg.getLogger("yamig.timeit")
     qualname = func.__qualname__
+
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         start_time = time.time()
 
         result = func(*args, **kwargs)
@@ -53,7 +58,7 @@ def timeit(func):
         end_time = time.time()
         elapsed_time = end_time - start_time
 
-        timeit_logger.debug(f'{qualname} took {elapsed_time:.4f}s to execute')
+        timeit_logger.debug("%s took %.4f to execute", qualname, elapsed_time)
 
         return result
     return wrapper
