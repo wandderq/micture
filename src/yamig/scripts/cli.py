@@ -117,6 +117,13 @@ class YamigCLI:
             default=None,
             help='schematic description (default: derived from input)'
         )
+
+        argparser.add_argument(
+            '-y', '--yes',
+            dest='yes',
+            action='store_true',
+            help='yes'
+        )
     
         log_group.add_argument(
             '-v', '--verbose',
@@ -152,7 +159,10 @@ class YamigCLI:
 
             else:
                 warning_msg = f"{args.output_path.name} already exists! Overwrite it? (Y/n) "
-                overwrite = input(warning_msg).strip().lower() == 'y'
+                overwrite = (
+                    True if args.yes
+                    else input(warning_msg).strip().lower() == 'y'
+                )
 
                 if overwrite:
                     os.remove(args.output_path)
