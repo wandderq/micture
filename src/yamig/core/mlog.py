@@ -1,20 +1,40 @@
 import copy
 import logging as lg
 
+from yamig.utils.logging import timeit
+from yamig.utils.params import YamigParams
+
 
 class MlogGenerator:
-    def __init__(self, max_script_length: int, resolution: tuple[int, int]):
+    def __init__(self, image_rects: list, params: YamigParams):
         self.logger = lg.getLogger('yamig.mlog-generator')
-        self.max_script_length = max_script_length
-        self.display_name = 'display1'
-        self.resolution = resolution
+        self.image_rects = image_rects
+        self.params = params
 
-
-    def generate_mlog(self, rects: list):
-        rects = self.flip_coords(rects)
+    @timeit
+    def run(self) -> list[str]:
+        rects = self.flip_coords(self.image_rects)
         color2rects = self.sort_rects_by_color(rects)
         big_script = self.generate_big_script(color2rects)
         scripts = self.split_big_script(big_script)
+
+        if self.params.debug_path is not None:
+            scripts_path = self.params.debug_path / 'scripts/'
+            scripts_path.mkdir(exist_ok=True)
+
+            # remove existing scripts
+            for script_path in scripts_path.iterdir():
+                if script_path.is_file() and script_path.suffix == '.mlog':
+                    self.logger.warning(f'removing old script: {str(script_path)}')
+                    os.remove(script_path)
+            
+            # save scripts
+            for i, script in enumerate(scripts, start=1):
+                script_path = scripts_path / f"script{i}.mlog"
+                with script_path.open(mode='w') as file:
+                    file.write('\n'.join(script) + '\n')
+                
+                self.logger.debug(f'script {i} saved to {str(script_path)}')
 
         return scripts
     
@@ -25,7 +45,7 @@ class MlogGenerator:
         for rect in rects:
             x, y, w, h, color = rect
 
-            flipped_rect = [x, self.resolution[1]-y-h, w, h, color]
+            flipped_rect = [x, self.params.resolution[1]-y-h, w, h, color]
             flipped_rects.append(flipped_rect)
 
         return flipped_rects
@@ -74,12 +94,12 @@ class MlogGenerator:
                 current_color = line
                 
                 if line_i != 1:
-                    script.append(f'drawflush {self.display_name}')
+                    script.append(f'drawflush display1')
                 script.append(line)
                 continue
 
-            if len(script) % (self.max_script_length-1) == 0:
-                script.append(f'drawflush {self.display_name}')
+            if len(script) % (self.params.max_script_len-1) == 0:
+                script.append(f'drawflush display1')
                 self.logger.debug(f'adding script part len={len(script)}')
                 scripts.append(copy.deepcopy(script))
                 script = [current_color]
@@ -88,7 +108,7 @@ class MlogGenerator:
             script.append(line)
         
         self.logger.debug(f'adding script part len={len(script)}')
-        script.append(f'drawflush {self.display_name}')
+        script.append(f'drawflush display1')
         scripts.append(copy.deepcopy(script))
 
         return scripts

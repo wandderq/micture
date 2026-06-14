@@ -1,30 +1,51 @@
+import json
 import logging as lg
 
 import numpy as np
 from PIL import Image, ImageDraw
 
+from yamig.utils.logging import timeit
+from yamig.utils.params import YamigParams
+
 
 class QuadtreeProcessor:
     def __init__(self,
-        image: Image,
-        min_region_size: int,
-        dispersion_threshold: int,
-        resolution: tuple[int,int],
-        palette: np.array
+        image_array: np.array,
+        image_palette: np.array,
+        params: YamigParams
     ):
         self.logger = lg.getLogger('yamig.quadtree')
-        self.image_array = np.array(image, dtype=np.float32)
-        self.min_region_size = min_region_size
-        self.dispersion_threshold = dispersion_threshold
-        self.resolution = resolution
-        self.palette = palette
+        self.image_array = image_array
+        self.image_palette = image_palette
+        self.params = params
     
+    @timeit
+    def run(self) -> list:
+        self.logger.info('processing quadtree')
+        rects = [
+            (r[0], r[1], r[2], r[3], tuple(int(c) for c in r[4]))
+            for r in self.decompose(0, 0, *self.params.resolution)
+        ]
 
-    def _find_closest_color(self, color):
-        distances = np.sum((self.palette - color) ** 2, axis=1)
-        return np.argmin(distances)
+        if self.params.debug_path is not None:
+            image_rects_path = self.params.debug_path / 'quadtree_rects.json'
+            recomposed_image_path = self.params.debug_path / 'quadtree_recomposed.jpg'
 
+            # rects.json
+            with image_rects_path.open(mode='w') as rects_file:
+                json.dump(rects, rects_file, indent=2)
+            
+            self.logger.debug(f'image rects saved to {str(image_rects_path)}')
 
+            # recomposed.json
+            recomposed_image = self.recompose(rects)
+            recomposed_image.save(recomposed_image_path)
+
+            self.logger.debug(f'recomposed image saved to {str(recomposed_image_path)}')
+        
+        return rects
+    
+    
     def decompose(self, x: int, y: int, w: int, h: int) -> list:
         region = self.image_array[y:y+h, x:x+w]
         region_mean_color = np.mean(region, axis=(0, 1))
@@ -33,12 +54,11 @@ class QuadtreeProcessor:
         
         rects = []
 
-        if (w <= self.min_region_size
-            or h <= self.min_region_size
-            or region_dispersion <= self.dispersion_threshold
+        if (w <= self.params.min_region_size
+            or h <= self.params.min_region_size
+            or region_dispersion <= self.params.dispersion_threshold
         ):
-            idx = self._find_closest_color(region_mean_color)
-            rect_color = tuple(self.palette[idx])
+            rect_color = self._find_closest_color(region_mean_color)
             rects.append((x, y, w, h, rect_color))
         
         else:
@@ -51,18 +71,9 @@ class QuadtreeProcessor:
         
         return rects
     
-    
-    def get_rects(self) -> list:
-        rects = self.decompose(0, 0, *self.resolution)
-        return [
-            (r[0], r[1], r[2], r[3], tuple(int(c) for c in r[4]))
-            for r in rects
-        ]
-    
 
     def recompose(self, rects: list) -> Image:
-        self.logger.debug('recomposing image from rects')
-        image = Image.new('RGB', self.resolution, (0, 0, 0))
+        image = Image.new('RGB', self.params.resolution, (0, 0, 0))
         draw = ImageDraw.Draw(image)
 
         for rect in rects:
@@ -74,3 +85,10 @@ class QuadtreeProcessor:
             draw.rectangle([x, y, x2, y2], fill=color)
         
         return image
+    
+
+    def _find_closest_color(self, color):
+        distances = np.sum((self.image_palette - color) ** 2, axis=1)
+        idx = np.argmin(distances)
+        color = tuple(self.image_palette[idx])
+        return color

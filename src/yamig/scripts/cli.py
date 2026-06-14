@@ -1,13 +1,20 @@
+import logging as lg
+import os
 import re
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
+
+from pymsch import Content
 
 from yamig import __version__
 from yamig.core.main import Yamig
 from yamig.utils.logging import setup_logger
+from yamig.utils.params import YamigParams
 
 
+#TODO: add --display option (for features/all-displays-support)
+#TODO: add --processor option (for features/all-processors-support)
 class YamigCLI:
     def __init__(self):
         self.argparser = self._init_argparser()
@@ -29,79 +36,85 @@ class YamigCLI:
 
         argparser.add_argument(
             '-o', '--output',
+            dest='output_path',
             type=Path,
             default=None,
-            dest='output_path',
-            help='output directory (default: derived from input)'
+            help='output path (default: derived from args)'
         )
 
         argparser.add_argument(
-            '-O', '--onefile',
-            dest='onefile',
-            action='store_true',
-            help='save only .msch file'
+            '--debug',
+            dest='debug_path',
+            type=Path,
+            default=None,
+            help='debug path (default: None) (None = no intermediate files)'
         )
         
         argparser.add_argument(
-            '-C', '--copy-to-clipboard',
-            dest='copy_to_clipboard',
+            '-C', '--to-clipboard',
+            dest='to_clipboard',
             action='store_true',
             help='copy schematic to clipboard'
         )
 
         argparser.add_argument(
             '-r', '--resolution',
-            type=str,
-            default='5x5b',
             dest='resolution',
-            help='target resolution (format: WxH[b/px]) (default: 5x5b)'
+            type=str,
+            default='300x300px',
+            help=(
+                'target resolution. '
+                'format: WxH[px/d] '
+                '(px - pixels, d - displays) '
+                '(default: 300x300px)'
+            )
         )
 
         argparser.add_argument(
             '-c', '--max-colors',
+            dest='max_colors',
             type=int,
             default=64,
-            dest='max_colors',
-            help='max colors in output (default: 64) (up to 15%% loss)'
+            help='max image colors (default: 64) (1-255) (up to 15%% loss)'
         )
 
         argparser.add_argument(
             '-t', '--dispersion-threshold',
+            dest='dispersion_threshold',
             type=int,
             default=600,
-            dest='dispersion_threshold',
-            help='quadtree color dispersion threshold (default: 600)'
+            help='quadtree color dispersion threshold (default: 600) (>0)'
         )
 
         argparser.add_argument(
             '-s', '--min-region-size',
-            type=int,
-            default=8,
             dest='min_region_size',
-            help='min quadtree region size in pixels (default: 8)'
+            type=int,
+            default=4,
+            help='min image region size (px) (default: 4) (>0)'
         )
 
         argparser.add_argument(
             '-l', '--max-script-len',
+            dest='max_script_len',
             type=int,
             default=1000,
-            dest='max_script_len',
-            help='max lines per processor script (default: 1000)'
+            help='max lines per processor script (default: 1000) (3-1000)'
         )
 
         argparser.add_argument(
             '-N', '--schema-name',
+            dest='schema_name',
             type=str,
             default=None,
-            dest='schema_name',
             help='schematic name (default: derived from input)'
         )
 
         argparser.add_argument(
-            '-D', '--schema-desc',
+            '-D', '--schema-description',
+            dest='schema_description',
             type=str,
             default=None,
-            dest='schema_desc',
             help='schematic description (default: derived from input)'
         )
     
@@ -129,38 +142,29 @@ class YamigCLI:
         return argparser
     
 
-    def _parse_input_path(self, input_path: Path) -> Path:
-        input_path = input_path.absolute()
+    def _parse_output_path(self, args: Namespace):
+        if args.output_path is None:
+            args.output_path = Path(f'{args.input_path.stem}.msch').absolute()
+        
+        if args.output_path.exists():
+            if not args.output_path.is_file():
+                raise FileExistsError(f'{args.output_path} exists and it\'s not a file!')
 
-        if not input_path.exists():
-            raise FileNotFoundError(f'{str(input_path)} not found!')
-        
-        if not input_path.is_file():
-            raise FileNotFoundError(f'{str(input_path)} is dir!')
-        
-        return input_path
-    
+            else:
+                warning_msg = f"{args.output_path.name} already exists! Overwrite it? (Y/n) "
+                overwrite = input(warning_msg).strip().lower() == 'y'
 
-    def _parse_output_path(self, output_path: Path | None, input_path: Path) -> Path:
-        if output_path is None:
-            output_path = Path(f'yamig_{input_path.stem}').absolute()
-        
-        else:
-            output_path = output_path.absolute()
-        
-        if output_path.is_file():
-            raise FileExistsError(f'{output_path} is file! (should be dir)')
-        
-        if not output_path.exists():
-            output_path.mkdir(parents=True, exist_ok=True)
-        
-        return output_path
+                if overwrite:
+                    os.remove(args.output_path)
+                
+                else:
+                    raise FileExistsError(f'{args.output_path} exists!')
 
 
-    def _parse_resolution(self, resolution: str) -> tuple[int, int]:
-        match = re.match(r'^(\d+)x(\d+)(px|b)$', resolution)
+    def _parse_resolution(self, args: Namespace):
+        match = re.match(r'^(\d+)x(\d+)(px|d)$', args.resolution)
         if not match:
-            raise ValueError(f'Invalid resolution: {resolution}')
+            raise ValueError(f'Invalid resolution: {args.resolution}')
         
         width = int(match.group(1))
         height = int(match.group(2))
@@ -168,113 +172,47 @@ class YamigCLI:
         
 
         if suffix == 'px':
-            resolution = (
-                (width + 16) // 32 * 32,
-                (height + 16) // 32 * 32
-            )
+            args.resolution = (width, height)
         
+        elif suffix == 'd':
+            self.logger.warning('tile-logic-display is only supported display for now! using 32px multiplier')
+            args.resolution = (width * 32, height * 32)
+            #TODO: use actual display size (for features/all-displays-support)
         else:
-            resolution = (width * 32, height * 32)
-        
-        return resolution
-
-    
-    def _parse_max_colors(self, max_colors: int) -> int:
-        if not (1 <= max_colors <= 256):
-            raise ValueError(f'Invalid max colors value: {max_colors} (must be 1-256)')
-        
-        return max_colors
-    
-    
-    def _parse_dispersion_threshold(self, dispersion_threshold: int) -> int:
-        if not (0 <= dispersion_threshold <= 10000):
-            raise ValueError(
-                f'Invalid color dispersion threshold value: {dispersion_threshold} '
-                '(must be 0-10000)'
-            )
-        
-        return dispersion_threshold
-
-
-    def _parse_min_region_size(self, min_region_size: int) -> int:
-        if min_region_size <= 0:
-            raise ValueError(
-                f'Invalid min region size value: {min_region_size} '
-                '(must be > 0)'
-            )
-        
-        return min_region_size
-    
-
-    def _parse_max_script_len(self, max_script_len: int) -> int:
-        if not (3 <= max_script_len <= 1000):
-            raise ValueError(
-                f'Invalid max script length value: {max_script_len} '
-                '(must be 3-1000)'
-            )
-        
-        return max_script_len
-    
-
-    def _parse_schema_name(self,
-        schema_name: str | None,
-        input_path: Path,
-        resolution: tuple[int, int]
-    ) -> str:
-        if schema_name is None:
-            resolution_str = f'{resolution[0]}x{resolution[1]}'
-            schema_name = f'{input_path.stem} {resolution_str}'
-        
-        return schema_name
-    
-
-    def _parse_schema_desc(self,
-        schema_desc: str | None,
-        input_path: Path,
-        resolution: tuple[int, int],
-        dispersion_threshold: int,
-        max_colors: int,
-        min_region_size: int
-    ) -> str:
-        if schema_desc is None:
-            resolution_str = f'{resolution[0]}x{resolution[1]}'
-            schema_desc = (
-                f"{input_path.name} {resolution_str}\n"
-                f"max colors: {max_colors}\n"
-                f"dispersion threshold: {dispersion_threshold}\n"
-                f"min region size: {min_region_size}"
-            )
-        
-        return schema_desc
+            print('how')
 
 
     def run(self) -> None:
+        # args
         args = self.argparser.parse_args()
 
-        args.input_path = self._parse_input_path(args.input_path)
-        args.output_path = self._parse_output_path(args.output_path, args.input_path)
-        args.resolution = self._parse_resolution(args.resolution)
-        args.max_colors = self._parse_max_colors(args.max_colors)
-        args.dispersion_threshold = self._parse_dispersion_threshold(args.dispersion_threshold)
-        args.min_region_size = self._parse_min_region_size(args.min_region_size)
-        args.max_script_len = self._parse_max_script_len(args.max_script_len)
-        args.schema_name = self._parse_schema_name(
-            args.schema_name,
-            args.input_path,
-            args.resolution
-        )
-        args.schema_desc = self._parse_schema_desc(
-            args.schema_desc,
-            args.input_path,
-            args.resolution,
-            args.dispersion_threshold,
-            args.max_colors,
-            args.min_region_size
+        # logger
+        setup_logger(args)
+        self.logger = lg.getLogger('yamig.cli')
+
+        # more arparse
+        self._parse_output_path(args)
+        self._parse_resolution(args)
+
+        # params
+        params = YamigParams(
+            input_path=args.input_path,
+            output_path=args.output_path,
+            debug_path=args.debug_path,
+            to_clipboard=args.to_clipboard,
+            resolution=args.resolution,
+            max_colors=args.max_colors,
+            dispersion_threshold=args.dispersion_threshold,
+            min_region_size=args.min_region_size,
+            display=Content.TILE_LOGIC_DISPLAY, #! remove this
+            processor=Content.MICRO_PROCESSOR, #! remove this
+            max_script_len=args.max_script_len,
+            schema_name=args.schema_name,
+            schema_description=args.schema_description
         )
 
-        setup_logger(args)
-        yamig = Yamig(args)
-        yamig.run()
+        # yamig
+        Yamig(params).run()
 
 
 def run_cli() -> None:
