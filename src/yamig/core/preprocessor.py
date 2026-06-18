@@ -9,12 +9,17 @@ from yamig.utils.params import YamigParams
 
 class Preprocessor:
     def __init__(self, params: YamigParams) -> None:
+        """yamig image loader & preprocessor
+
+        Args:
+            params (YamigParams): parameters
+        """
         self.logger = lg.getLogger("yamig.preprocessor")
         self.params = params
 
     @timeit
     def run(self) -> tuple[np.array, np.array]:
-        """yamig image preprocessor
+        """run preprocessor
 
         Returns:
             tuple[np.array, np.array]: image array, image palette.

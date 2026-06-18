@@ -8,6 +8,13 @@ from yamig.utils.params import YamigParams
 
 class SchemaGenerator:
     def __init__(self, scripts: list, params: YamigParams) -> None:
+        """generates mindustry schematic using processors' scripts
+        thanks to SkyeTheFoxyFox for the pymsch library
+
+        Args:
+            scripts (list): processors' scripts
+            params (YamigParams): parameters
+        """
         self.logger = lg.getLogger("yamig.schema-generator")
         self.scripts = scripts
         self.params = params
@@ -15,6 +22,13 @@ class SchemaGenerator:
 
     @timeit
     def run(self) -> Schematic:
+        """run schema generator
+
+        Returns:
+            Schematic: schematic
+        """
+        self.logger.info("generating schema")
+
         schema = Schematic()
         schema.set_tag("name", self.params.schema_name)
 
@@ -28,12 +42,20 @@ class SchemaGenerator:
         self.logger.info("schema saved to %s", self.params.output_path)
 
         if self.params.to_clipboard:
+            self.logger.info("writing schema to clipboard")
             schema.write_clipboard()
 
         return schema
         
     
     def add_displays(self, schema: Schematic) -> None:
+        """add logic displays to the scheamtic
+        only supports tile-logic-display
+
+        Args:
+            schema (Schematic): schematic
+        """
+        self.logger.debug("adding displays to schema")
         display_x = self.params.resolution[0] // 32
         display_y = self.params.resolution[1] // 32
 
@@ -43,6 +65,13 @@ class SchemaGenerator:
     
 
     def add_processors(self, schema: Schematic) -> None:
+        """add processors to the schematic
+        only supports micro-processor and tile-logic-display
+
+        Args:
+            schema (Schematic): schematic
+        """
+        self.logger.debug("adding processors to schema")
         max_cols = self.params.resolution[0] // 32
 
         for script_i, script in enumerate(self.scripts):

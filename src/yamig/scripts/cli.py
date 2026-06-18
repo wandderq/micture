@@ -16,12 +16,18 @@ root_logger = YamigLogger()
 
 class YamigCLI:
     def __init__(self) -> None:
+        """yamig CLI interface"""
         self.argparser = self._init_argparser()
         self.logger = lg.getLogger("yamig.cli")
     
     #TODO: add --display option (for features/all-displays-support)
     #TODO: add --processor option (for features/all-processors-support)
     def _init_argparser(self) -> ArgumentParser:
+        """initialize ArgumentParser
+
+        Returns:
+            ArgumentParser: initialized parser
+        """
         argparser = ArgumentParser(
             description=f"yet another mindustry image generator v{__version__}",
             epilog="github: https://github.com/wandderq/yamig"
@@ -151,8 +157,20 @@ class YamigCLI:
     
 
     def _parse_output_path(self, args: Namespace) -> None:
+        """parse output path
+
+        Args:
+            args (Namespace): arguments
+
+        Raises:
+            FileExpectedError: if output path exists and it's not a file
+            FileExistsError: if output path exists and user refused to overwrite it
+        """
+        self.logger.debug("parsing output path")
+
         if args.output_path is None:
             args.output_path = Path(f"{args.input_path.stem}.msch").absolute()
+            self.logger.warning("using default output path: %s", args.output_path)
         
         if args.output_path.exists():
             if not args.output_path.is_file():
@@ -172,6 +190,15 @@ class YamigCLI:
 
 
     def _parse_resolution(self, args: Namespace) -> None:
+        """parse image resolution
+        converts any resolution format into pixels
+
+        Args:
+            args (Namespace): arguments
+
+        Raises:
+            ValueError: if resolution format is invalid
+        """
         match = re.match(r"^(\d+)x(\d+)(px|d)$", args.resolution)
         if not match:
             raise ValueError(args.resolution)
@@ -185,11 +212,12 @@ class YamigCLI:
             args.resolution = (width, height)
         
         else:
+            #TODO: use actual display size (for features/all-displays-support)
             args.resolution = (width * 32, height * 32)
-        #TODO: use actual display size (for features/all-displays-support)
 
 
     def run(self) -> None:
+        """run yamig CLI"""
         # parse args
         args = self.argparser.parse_args()
 
@@ -201,7 +229,6 @@ class YamigCLI:
             lg.INFO
         )
         root_logger.add_file_handler(args.debug_path)
-
 
         # parse args (more)
         self._parse_output_path(args)

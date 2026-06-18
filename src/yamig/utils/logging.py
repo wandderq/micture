@@ -12,7 +12,6 @@ from colorlog import ColoredFormatter
 P = ParamSpec("P")
 R = TypeVar("R")
 
-
 class YamigLogger:
     def __init__(self) -> None:
         self.logger = lg.getLogger("yamig")

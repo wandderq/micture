@@ -7,12 +7,24 @@ from yamig.utils.params import YamigParams
 
 class MlogGenerator:
     def __init__(self, image_rects: list, params: YamigParams) -> None:
+        """generates MLog code from image rects list
+
+        Args:
+            image_rects (list): image rects
+            params (YamigParams): parameters
+        """
         self.logger = lg.getLogger("yamig.mlog-generator")
         self.image_rects = image_rects
         self.params = params
 
+
     @timeit
-    def run(self) -> list[str]:
+    def run(self) -> list[list[str]]:
+        """run mlog generator
+
+        Returns:
+            list[list[str]]: list of scripts for each processor
+        """
         rects = self.flip_coords(self.image_rects)
         color2rects = self.sort_rects_by_color(rects)
         big_script = self.generate_big_script(color2rects)
@@ -40,18 +52,39 @@ class MlogGenerator:
     
 
     def flip_coords(self, rects: list) -> list:
+        """flip rects' Y coordinates to the mindustry display origin
+        PIL.Image origin: top-left corner
+        mindustry display origin: bottom-left corner
+
+        Args:
+            rects (list): rectangles
+
+        Returns:
+            list: flipped rectangles
+        """
         flipped_rects = []
+
+        #TODO: use map() instead of creating a new rects list
 
         for rect in rects:
             x, y, w, h, color = rect
 
             flipped_rect = [x, self.params.resolution[1]-y-h, w, h, color]
             flipped_rects.append(flipped_rect)
-
+        
+        self.logger.debug("flipped Y for %d rects", len(flipped_rects))
         return flipped_rects
     
 
     def sort_rects_by_color(self, rects: list) -> dict[tuple, list]:
+        """sort rectangles by colors
+
+        Args:
+            rects (list): rectangles
+
+        Returns:
+            dict[tuple, list]: {color (r, g, b): rectangles_list (x, y, w, h)}
+        """
         self.logger.debug("sorting rects by color")
         color2rects = {}
 
@@ -68,6 +101,14 @@ class MlogGenerator:
     
 
     def generate_big_script(self, color2rects: dict) -> list[str]:
+        """generate one big MLog script
+
+        Args:
+            color2rects (dict): rects sorted by color
+
+        Returns:
+            list[str]: lines of big script
+        """
         self.logger.debug("generating big script")
         script = []
 
@@ -79,15 +120,27 @@ class MlogGenerator:
             ])
         
         self.logger.debug("big script length: %d", len(script))
-        
         return script
     
 
-    def split_big_script(self, big_script: str) -> list[str]:
+    def split_big_script(self, big_script: str) -> list[list[str]]:
+        """split a big script into scripts for processors
+
+        Args:
+            big_script (str): a big script
+
+        Returns:
+            list[list[str]]: list of each processor's scripts
+        """
+        self.logger.debug("splitting big script")
+
+        #TODO: optimize it somehow
+
         scripts = []
         script = []
 
         current_color = None
+
 
         for line_i, line in enumerate(big_script, start=1):
             if line.startswith("draw color"):
@@ -111,4 +164,5 @@ class MlogGenerator:
         script.append("drawflush display1")
         scripts.append(copy.deepcopy(script))
 
+        self.logger.info("total processors: %d", len(scripts))
         return scripts

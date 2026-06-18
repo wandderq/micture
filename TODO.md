@@ -1,6 +1,6 @@
 ## TODO
 - [x] find and fix typos
-- [ ] more logging
+- [x] more logging
 - [x] -q/--quiet mode
 - [ ] more schematic settings (tags, size, processor positions)
 - [x] onefile mode (without preoprocessed.jpg, recomposed.jpg, scripts/, etc.)
