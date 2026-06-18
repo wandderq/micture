@@ -1,51 +1,62 @@
 import logging as lg
 import sys
 import time
-from argparse import Namespace
 from collections.abc import Callable
 from functools import wraps
-from logging import StreamHandler
+from logging import FileHandler, Formatter, StreamHandler
+from pathlib import Path
 from typing import ParamSpec, TypeVar
 
 from colorlog import ColoredFormatter
 
-
-def setup_logger(args: Namespace) -> None:
-    level = (
-        lg.DEBUG if args.verbose else
-        lg.WARNING if args.quiet else
-        0 if args.silent else
-        lg.INFO
-    )
-
-    root_logger = lg.getLogger("yamig")
-    root_logger.handlers.clear()
-    root_logger.setLevel(lg.DEBUG)
-    
-    # if not silent
-    if level != 0:
-        # stream handler
-        stream_handler = StreamHandler(stream=sys.stdout)
-        stream_handler.setFormatter(
-            ColoredFormatter(
-                fmt="{log_color}{levelname}{reset}:{name} {message}",
-                style="{",
-                log_colors={
-                    "DEBUG": "blue",
-                    "INFO": "green",
-                    "WARNING": "yellow",
-                    "ERROR": "red"
-                }
-            )
-        )
-        stream_handler.setLevel(level)
-        root_logger.addHandler(stream_handler)
-
 P = ParamSpec("P")
 R = TypeVar("R")
 
+
+class YamigLogger:
+    def __init__(self) -> None:
+        self.logger = lg.getLogger("yamig")
+        self.logger.handlers.clear()
+        self.logger.setLevel(lg.DEBUG)
+
+        self.file_handler = None
+
+        self.stream_handler = StreamHandler(stream=sys.stdout)
+        self.stream_handler.setFormatter(ColoredFormatter(
+            fmt="{name}:{log_color}{levelname}{reset}: {message}",
+            style="{",
+            log_colors={
+                "DEBUG": "blue",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red"
+            }
+        ))
+        self.stream_handler.setLevel(lg.INFO)
+        self.logger.addHandler(self.stream_handler)
+
+
+    def set_level(self, level: int) -> None:
+        return self.stream_handler.setLevel(level)
+
+
+    def add_file_handler(self, debug_path: Path | None) -> None:
+        if debug_path is None:
+            return
+        
+        self.file_handler = FileHandler(debug_path / "debug.log", mode="w")
+        self.file_handler.setLevel(lg.DEBUG)
+        self.file_handler.setFormatter(Formatter(
+            fmt="{asctime} {name} {levelname}: {message}",
+            datefmt="%Y.%m.%d %H:%M:%S",
+            style="{"
+        ))
+
+        self.logger.addHandler(self.file_handler)
+
+
+
 def timeit(func: Callable) -> Callable:
-    
     timeit_logger = lg.getLogger("yamig.timeit")
     qualname = func.__qualname__
 

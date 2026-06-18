@@ -1,3 +1,4 @@
+import logging as lg
 import re
 import sys
 from argparse import ArgumentParser, Namespace
@@ -8,13 +9,15 @@ from pymsch import Content
 from yamig import __version__
 from yamig.core.main import Yamig
 from yamig.utils.exceptions import FileExpectedError
-from yamig.utils.logging import setup_logger
+from yamig.utils.logging import YamigLogger
 from yamig.utils.params import YamigParams
 
+root_logger = YamigLogger()
 
 class YamigCLI:
     def __init__(self) -> None:
         self.argparser = self._init_argparser()
+        self.logger = lg.getLogger("yamig.cli")
     
     #TODO: add --display option (for features/all-displays-support)
     #TODO: add --processor option (for features/all-processors-support)
@@ -187,13 +190,20 @@ class YamigCLI:
 
 
     def run(self) -> None:
-        # args
+        # parse args
         args = self.argparser.parse_args()
 
-        # logger
-        setup_logger(args)
+        # configure root logger
+        root_logger.set_level(
+            lg.DEBUG if args.verbose else
+            lg.WARNING if args.quiet else
+            lg.CRITICAL+1 if args.silent else
+            lg.INFO
+        )
+        root_logger.add_file_handler(args.debug_path)
 
-        # more arparse
+
+        # parse args (more)
         self._parse_output_path(args)
         self._parse_resolution(args)
 
@@ -224,13 +234,13 @@ def run_cli() -> None:
         app.run()
         sys.exit(0)
     
-    except Exception as e:
-        e_name = e.__class__.__name__
-        
-        print(f"\033[31m{e_name}: {e!s}")
-        print(f"Cause: {e.__cause__}")
-
+    except Exception:
+        root_logger.logger.exception()
         sys.exit(1)
+    
+    except KeyboardInterrupt:
+        root_logger.logger.info("interrupted")
+        sys.exit(0)
 
 
 if __name__ == "__main__":
