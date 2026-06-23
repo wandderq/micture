@@ -2,20 +2,20 @@ import logging as lg
 
 from pymsch import Block, Content, ProcessorConfig, ProcessorLink, Schematic
 
-from yamig.utils.logging import timeit
-from yamig.utils.params import YamigParams
+from micture.utils.logging import timeit
+from micture.utils.params import Params
 
 
 class SchemaGenerator:
-    def __init__(self, scripts: list, params: YamigParams) -> None:
+    def __init__(self, scripts: list, params: Params) -> None:
         """generates mindustry schematic using processors' scripts
         thanks to SkyeTheFoxyFox for the pymsch library
 
         Args:
             scripts (list): processors' scripts
-            params (YamigParams): parameters
+            params (Params): parameters
         """
-        self.logger = lg.getLogger("yamig.schema-generator")
+        self.logger = lg.getLogger("micture.schema")
         self.scripts = scripts
         self.params = params
     

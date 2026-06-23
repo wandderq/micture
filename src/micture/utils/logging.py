@@ -12,9 +12,9 @@ from colorlog import ColoredFormatter
 P = ParamSpec("P")
 R = TypeVar("R")
 
-class YamigLogger:
+class MictureLogger:
     def __init__(self) -> None:
-        self.logger = lg.getLogger("yamig")
+        self.logger = lg.getLogger("micture")
         self.logger.handlers.clear()
         self.logger.setLevel(lg.DEBUG)
 
@@ -56,7 +56,7 @@ class YamigLogger:
 
 
 def timeit(func: Callable) -> Callable:
-    timeit_logger = lg.getLogger("yamig.timeit")
+    timeit_logger = lg.getLogger("micture.timeit")
     qualname = func.__qualname__
 
     @wraps(func)

@@ -3,18 +3,18 @@ import logging as lg
 import numpy as np
 from PIL import Image
 
-from yamig.utils.logging import timeit
-from yamig.utils.params import YamigParams
+from micture.utils.logging import timeit
+from micture.utils.params import Params
 
 
 class Preprocessor:
-    def __init__(self, params: YamigParams) -> None:
-        """yamig image loader & preprocessor
+    def __init__(self, params: Params) -> None:
+        """image loader & preprocessor
 
         Args:
-            params (YamigParams): parameters
+            params (Params): parameters
         """
-        self.logger = lg.getLogger("yamig.preprocessor")
+        self.logger = lg.getLogger("micture.preprocessor")
         self.params = params
 
     @timeit
@@ -54,3 +54,4 @@ class Preprocessor:
             self.logger.debug("preprocessed image saved to %s", preprocessed_image_path)
 
         return img_array, img_palette
+

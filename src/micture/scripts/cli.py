@@ -6,19 +6,19 @@ from pathlib import Path
 
 from pymsch import Content
 
-from yamig import __version__
-from yamig.core.main import Yamig
-from yamig.utils.exceptions import FileExpectedError
-from yamig.utils.logging import YamigLogger
-from yamig.utils.params import YamigParams
+from micture import __version__
+from micture.core.main import Micture
+from micture.utils.exceptions import FileExpectedError
+from micture.utils.logging import MictureLogger
+from micture.utils.params import Params
 
-root_logger = YamigLogger()
+root_logger = MictureLogger()
 
-class YamigCLI:
+class MictureCLI:
     def __init__(self) -> None:
-        """yamig CLI interface"""
+        """CLI interface"""
         self.argparser = self._init_argparser()
-        self.logger = lg.getLogger("yamig.cli")
+        self.logger = lg.getLogger("micture.cli")
     
     #TODO: add --display option (for features/all-displays-support)
     #TODO: add --processor option (for features/all-processors-support)
@@ -29,8 +29,8 @@ class YamigCLI:
             ArgumentParser: initialized parser
         """
         argparser = ArgumentParser(
-            description=f"yet another mindustry image generator v{__version__}",
-            epilog="github: https://github.com/wandderq/yamig"
+            description=f"picture to mindustry schematic converter v{__version__}",
+            epilog="github: https://github.com/wandderq/micture"
         )
 
         log_group = argparser.add_mutually_exclusive_group()
@@ -217,7 +217,7 @@ class YamigCLI:
 
 
     def run(self) -> None:
-        """run yamig CLI"""
+        """run CLI"""
         # parse args
         args = self.argparser.parse_args()
 
@@ -235,7 +235,7 @@ class YamigCLI:
         self._parse_resolution(args)
 
         # params
-        params = YamigParams(
+        params = Params(
             input_path=args.input_path,
             output_path=args.output_path,
             debug_path=args.debug_path,
@@ -251,13 +251,13 @@ class YamigCLI:
             schema_description=args.schema_description
         )
 
-        # yamig
-        Yamig(params).run()
+        # run micture
+        Micture(params).run()
 
 
 def run_cli() -> None:
     try:
-        app = YamigCLI()
+        app = MictureCLI()
         app.run()
         sys.exit(0)
     

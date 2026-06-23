@@ -1,9 +1,9 @@
-# yamig
-**Yet Another Mindustry Image Generator** — converts PNG/JPG images into Mindustry schematics.
+# micture - mindustry picture
+Converts pictures to mindustry logic schematics
 
 
 ## Features
-- works only with **tile displays** and **micro processors**
+- works only with **tile displays** and **micro processors** (all processors & displays support soon)
 - fully customizable schematic generation:
   - image resolution & scaling
   - color quantization limits
@@ -15,9 +15,16 @@
 ## Installation
 Python 3.12 or higher is required.
 
-### From GitHub
+### Using pip/pipx
 ```bash
-pipx install git+https://github.com/wandderq/yamig.git
+pipx install git+https://github.com/wandderq/micture.git
+```
+
+### From source
+```bash
+git clone https://github.com/wandderq/micture
+cd micture
+pip install .
 ```
 
 ## Dependencies
@@ -25,7 +32,9 @@ pipx install git+https://github.com/wandderq/yamig.git
 - `numpy` - array operations
 - `pymsch` - schematic generating
 
+
 ## Usage
+
 ### Positional arguments
 | argument | description |
 |----------|-------------|
@@ -54,23 +63,20 @@ pipx install git+https://github.com/wandderq/yamig.git
 ## Examples
 1. basic usage
 ```bash
-yamig picture.jpg
+micture picture.jpg
 ```
 2. custom resolution and output path
 ```bash
-yamig picture.jpg -r 10x10d -o schematics/pic_10x10d.msch
+micture picture.jpg -r 10x10d -o schematics/pic_10x10d.msch
 ```
 3. higher quality
 ```bash
-yamig picture.jpg -r 16x9d -c 256 -s 2 -d 200
+micture picture.jpg -r 16x9d -c 256 -s 2 -d 200
 ```
 4. accelerated in-game rendering (but more processors)
 ```bash
-yamig picture.jpg -r 800x600px -c 256 -s 1 -l 300
+micture picture.jpg -r 800x600px -c 256 -s 1 -l 300
 ```
 
 ## License
-Distributed under [MIT License](https://github.com/wandderq/yamig/blob/main/LICENSE) - free to use, modify, and distribute
-
----
-<p align=center><i>because there can never be enough mindustry image generators</i></p>
+Distributed under [MIT License](https://github.com/wandderq/micture/blob/main/LICENSE) - free to use, modify, and distribute

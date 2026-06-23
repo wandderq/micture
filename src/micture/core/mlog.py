@@ -1,19 +1,19 @@
 import copy
 import logging as lg
 
-from yamig.utils.logging import timeit
-from yamig.utils.params import YamigParams
+from micture.utils.logging import timeit
+from micture.utils.params import Params
 
 
 class MlogGenerator:
-    def __init__(self, image_rects: list, params: YamigParams) -> None:
+    def __init__(self, image_rects: list, params: Params) -> None:
         """generates MLog code from image rects list
 
         Args:
             image_rects (list): image rects
-            params (YamigParams): parameters
+            params (Params): parameters
         """
-        self.logger = lg.getLogger("yamig.mlog-generator")
+        self.logger = lg.getLogger("micture.mlog")
         self.image_rects = image_rects
         self.params = params
 
@@ -35,7 +35,7 @@ class MlogGenerator:
             scripts_path.mkdir(exist_ok=True)
 
             # remove existing scripts
-            for script_path in scripts_path.iterdir():
+            for script_path ivn scripts_path.iterdir():
                 if script_path.is_file() and script_path.suffix == ".mlog":
                     self.logger.debug("removing old script: %s", script_path)
                     script_path.unlink()

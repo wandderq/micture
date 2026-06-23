@@ -2,30 +2,28 @@ import logging as lg
 from dataclasses import asdict
 from pprint import pformat
 
-from yamig import __version__
-from yamig.core.mlog import MlogGenerator
-from yamig.core.preprocessor import Preprocessor
-from yamig.core.quadtree import Quadtree
-from yamig.core.schema import SchemaGenerator
-from yamig.utils.params import YamigParams
+from micture import __version__
+from micture.core.mlog import MlogGenerator
+from micture.core.preprocessor import Preprocessor
+from micture.core.quadtree import Quadtree
+from micture.core.schema import SchemaGenerator
+from micture.utils.params import Params
 
 
-class Yamig:
-    def __init__(self, params: YamigParams) -> None:
-        """yamig - yet another mindustry image generator
-        generates schematics using PNG/JPG files
-        this is the core class, should be used by other interfaces like CLI or GUI
+class Micture:
+    def __init__(self, params: Params) -> None:
+        """picture to mindustry schematic converter
 
         Args:
-            params (YamigParams): generator parameters
+            params (Params): generator parameters
         """
-        self.logger = lg.getLogger("yamig.core")
+        self.logger = lg.getLogger("micture.core")
         self.params = params
     
     
     def run(self) -> None:
-        """run yamig"""
-        self.logger.info("yamig v%s", __version__)
+        """run micture"""
+        self.logger.info("micture v%s", __version__)
         self.logger.debug(pformat(asdict(self.params)))
 
         # preprocessor

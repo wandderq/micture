@@ -4,20 +4,20 @@ import logging as lg
 import numpy as np
 from PIL import Image, ImageDraw
 
-from yamig.utils.logging import timeit
-from yamig.utils.params import YamigParams
+from micture.utils.logging import timeit
+from micture.utils.params import Params
 
 
 class Quadtree:
-    def __init__(self, image_array: np.array, image_palette: np.array, params: YamigParams) -> None:
-        """yamig quadtree algorithm
+    def __init__(self, image_array: np.array, image_palette: np.array, params: Params) -> None:
+        """quadtree algorithm processor
 
         Args:
             image_array (np.array): preprocessed image
             image_palette (np.array): preprocessed image palette
-            params (YamigParams): quadtree parameters
+            params (Params): quadtree parameters
         """
-        self.logger = lg.getLogger("yamig.quadtree")
+        self.logger = lg.getLogger("micture.quadtree")
         self.image_array = image_array
         self.image_palette = image_palette
         self.params = params

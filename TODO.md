@@ -13,3 +13,4 @@
 - [x] make onefile the primary mode:
   - [x] add `--debug` option, which will save intermediate files
   - [x] remove `--onefile` option
+- [ ] mindustry JS mod

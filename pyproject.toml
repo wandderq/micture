@@ -1,7 +1,7 @@
 [project]
-name = "yamig"
-version = "1.0.0"
-description = "yet another mindustry image generator"
+name = "micture"
+version = "2.0.0"
+description = "picture to mindustry schematic converter"
 authors = [
     { name = "wandderq", email = "wanddr.qq@gmail.com" }
 ]
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-yamig = "yamig.scripts.cli:run_cli"
+micture = "micture.scripts.cli:run_cli"
 
 [build-system]
 requires = ["uv_build>=0.11.15,<0.12.0"]
