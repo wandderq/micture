@@ -102,3 +102,4 @@ uv.lock
 /.vscode/
 /test/
 *.msch
+/test_images/

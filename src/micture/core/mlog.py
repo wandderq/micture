@@ -35,7 +35,7 @@ class MlogGenerator:
             scripts_path.mkdir(exist_ok=True)
 
             # remove existing scripts
-            for script_path ivn scripts_path.iterdir():
+            for script_path in scripts_path.iterdir():
                 if script_path.is_file() and script_path.suffix == ".mlog":
                     self.logger.debug("removing old script: %s", script_path)
                     script_path.unlink()

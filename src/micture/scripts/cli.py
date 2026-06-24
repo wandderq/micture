@@ -214,12 +214,22 @@ class MictureCLI:
         else:
             #TODO: use actual display size (for features/all-displays-support)
             args.resolution = (width * 32, height * 32)
+    
+
+    def _mkdirs(self, args: Namespace) -> None:
+        args.output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if args.debug_path:
+            args.debug_path.mkdir(parents=True, exist_ok=True)
 
 
     def run(self) -> None:
         """run CLI"""
         # parse args
         args = self.argparser.parse_args()
+
+        # make dirs
+        self._mkdirs(args)
 
         # configure root logger
         root_logger.set_level(
@@ -262,7 +272,7 @@ def run_cli() -> None:
         sys.exit(0)
     
     except Exception:
-        root_logger.logger.exception()
+        root_logger.logger.exception("exception")
         sys.exit(1)
     
     except KeyboardInterrupt:

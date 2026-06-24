@@ -51,9 +51,6 @@ class Params:
 
     def validate_output_path(self) -> None:
         self.output_path = Path(self.output_path).absolute()
-
-        self.output_path.parent.mkdir(exist_ok=True, parents=True)
-        self.output_path.touch(exist_ok=True)
     
 
     def validate_debug_path(self) -> None:
@@ -61,7 +58,6 @@ class Params:
             return
         
         self.debug_path = Path(self.debug_path).absolute()
-        self.debug_path.mkdir(parents=True, exist_ok=True)
 
 
     def validate_display(self) -> None:
